@@ -1,0 +1,10 @@
+{
+  "name": "nodenote",
+  "dependencies": {
+    "purescript-halogen": "92fe4107e7f1bac21f252dfdf0ca669ea993ffb8",
+    "purescript-prelude": "^2.1.0",
+    "purescript-eff": "^2.0.0",
+    "purescript-aff": "^2.0.1",
+    "purescript-free": "^3.0.1"
+  }
+}

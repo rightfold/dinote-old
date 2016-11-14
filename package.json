@@ -1,0 +1,6 @@
+{
+  "name": "nodenote",
+  "dependencies": {
+    "virtual-dom": "^2.1.1"
+  }
+}
