@@ -11,8 +11,8 @@ import NN.Effects (NNEffects)
 import NN.Prelude
 import NN.Workspace as Workspace
 
-main :: forall eff. Eff (NNEffects eff) Unit
+main :: ∀ eff. Eff (NNEffects eff) Unit
 main = runHalogenAff main'
 
-main' :: forall eff. Aff (NNEffects eff) Unit
+main' :: ∀ eff. Aff (NNEffects eff) Unit
 main' = awaitBody >>= runUI (interpret runNNDSL Workspace.ui) # void

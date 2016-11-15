@@ -11,7 +11,7 @@ type NNDSL = Free NNDSLF
 
 data NNDSLF a = NNDSLF Void
 
-runNNDSL :: forall eff. NNDSL ~> Aff eff
+runNNDSL :: ∀ eff. NNDSL ~> Aff eff
 runNNDSL = foldFree go
     where
     go :: NNDSLF ~> Aff eff
