@@ -1,5 +1,5 @@
 module NN.Vertex
-( VertexID
+( VertexID(..)
 , Vertex
 ) where
 

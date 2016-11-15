@@ -11,6 +11,9 @@
     "purescript-functors": "~1.0.0",
     "purescript-tailrec": "~2.0.1",
     "purescript-foldable-traversable": "~2.0.0",
-    "purescript-tuples": "~3.0.0"
+    "purescript-tuples": "~3.0.0",
+    "purescript-sets": "^2.0.0",
+    "purescript-transformers": "^2.0.2",
+    "purescript-lazy": "^2.0.0"
   }
 }
