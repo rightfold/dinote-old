@@ -7,6 +7,10 @@
     "purescript-aff": "^2.0.1",
     "purescript-free": "^3.0.1",
     "purescript-lists": "~3.2.1",
-    "purescript-monoid": "~2.0.0"
+    "purescript-monoid": "~2.0.0",
+    "purescript-functors": "~1.0.0",
+    "purescript-tailrec": "~2.0.1",
+    "purescript-foldable-traversable": "~2.0.0",
+    "purescript-tuples": "~3.0.0"
   }
 }

@@ -1,18 +1,22 @@
 module NN.DSL
 ( NNDSL
-, NNDSLF(..)
+, NNDSLF
 , runNNDSL
 ) where
 
+import Control.Monad.Aff.AVar (AVAR)
+import Control.Monad.Aff.Bus as Bus
 import Control.Monad.Free (foldFree, Free)
 import NN.Prelude
+import NN.Vertex.DSL (VertexDSLF(..))
 
 type NNDSL = Free NNDSLF
 
-data NNDSLF a = NNDSLF Void
+type NNDSLF = VertexDSLF
 
-runNNDSL :: ∀ eff. NNDSL ~> Aff eff
+runNNDSL :: ∀ eff. NNDSL ~> Aff (avar :: AVAR | eff)
 runNNDSL = foldFree go
     where
-    go :: NNDSLF ~> Aff eff
-    go (NNDSLF void) = absurd void
+    go :: NNDSLF ~> Aff (avar :: AVAR | eff)
+    go (Get _ a) = pure $ a Nothing
+    go (Bus _ a) = a <$> Bus.make
