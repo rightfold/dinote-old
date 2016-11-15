@@ -5,6 +5,8 @@
     "purescript-prelude": "^2.1.0",
     "purescript-eff": "^2.0.0",
     "purescript-aff": "^2.0.1",
-    "purescript-free": "^3.0.1"
+    "purescript-free": "^3.0.1",
+    "purescript-lists": "~3.2.1",
+    "purescript-monoid": "~2.0.0"
   }
 }
