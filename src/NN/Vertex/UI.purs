@@ -50,7 +50,7 @@ ui vertexID parentIDs =
             , H.section []
                 [ H.ul [] $
                     children
-                    # mapWithIndex renderChild
+                    # List.mapWithIndex (flip renderChild)
                     # map (H.li [])
                     # List.toUnfoldable
                 ]
@@ -74,7 +74,3 @@ ui vertexID parentIDs =
 
     finalizer :: Maybe (Query Unit)
     finalizer = Nothing
-
-mapWithIndex :: ∀ a b. (Int -> a -> b) -> List a -> List b
-mapWithIndex f = foldr step {i: 0, acc: Nil} >>> _.acc
-    where step x {i, acc} = {i: i + 1, acc: f i x : acc}
