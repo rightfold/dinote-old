@@ -5,16 +5,15 @@ module NN.Vertex.UI
 , ui
 ) where
 
-import Control.Monad.Aff.Bus as Bus
 import Control.Monad.State.Class as State
 import Data.List as List
 import Data.Set (Set)
 import Data.Set as Set
 import Halogen.Component (Component, lifecycleParentComponent, ParentDSL, ParentHTML)
+import Halogen.Component.Bus (busEvents)
 import Halogen.HTML (HTML)
 import Halogen.HTML as H
 import Halogen.Query (action)
-import Halogen.Query.EventSource (eventSource)
 import Halogen.Query.HalogenM (hoistM, subscribe)
 import NN.Note (Note(..))
 import NN.Prelude
@@ -79,18 +78,12 @@ ui vertexID parentIDs =
         in [H.slot slot childComponent absurd]
 
     eval :: Query ~> ParentDSL State Query Query Slot Output (Monad eff)
-    eval (Initialize next) = do
-        State.put =<< lift (mLiftVertexDSL (getVertex vertexID))
-
-        bus <- lift $ mLiftVertexDSL (vertexBus vertexID)
-        hoistM mLiftAff $ subscribe
-            let attach k = void $
-                    runAff (\_ -> pure unit) (\_ -> pure unit) $
-                        forever $ Bus.read bus >>= liftEff <<< k
-                handle a = pure $ Just (action (Update a))
-            in eventSource attach handle
-
-        pure next
+    eval (Initialize next) = immediate *> subsequent $> next
+        where
+        immediate = lift (mLiftVertexDSL (getVertex vertexID)) >>= State.put
+        subsequent = do
+            bus <- lift $ mLiftVertexDSL (vertexBus vertexID)
+            hoistM mLiftAff $ subscribe (busEvents bus (Just <<< action <<< Update))
     eval (Update vertex next) = next <$ State.put (Just vertex)
 
     initializer :: Maybe (Query Unit)

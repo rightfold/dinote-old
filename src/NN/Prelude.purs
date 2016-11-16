@@ -1,6 +1,7 @@
 module NN.Prelude
 ( module Control.Monad.Aff
 , module Control.Monad.Aff.AVar
+, module Control.Monad.Aff.Class
 , module Control.Monad.Eff
 , module Control.Monad.Eff.Class
 , module Control.Monad.Free
@@ -22,6 +23,7 @@ module NN.Prelude
 
 import Control.Monad.Aff (Aff, forkAff, runAff)
 import Control.Monad.Aff.AVar (AVAR)
+import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Free (foldFree, Free, hoistFree, liftF)
