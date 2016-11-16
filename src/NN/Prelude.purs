@@ -1,7 +1,11 @@
 module NN.Prelude
 ( module Control.Monad.Aff
+, module Control.Monad.Aff.AVar
 , module Control.Monad.Eff
+, module Control.Monad.Eff.Class
 , module Control.Monad.Free
+, module Control.Monad.Rec.Class
+, module Control.Monad.Trans.Class
 , module Data.Foldable
 , module Data.Functor.Coproduct
 , module Data.Functor.Product
@@ -16,9 +20,13 @@ module NN.Prelude
 , type (⊗)
 ) where
 
-import Control.Monad.Aff (Aff)
+import Control.Monad.Aff (Aff, forkAff, runAff)
+import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Eff (Eff)
+import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Free (foldFree, Free, hoistFree, liftF)
+import Control.Monad.Rec.Class (forever)
+import Control.Monad.Trans.Class (lift, class MonadTrans)
 import Data.Foldable (fold, class Foldable, foldl, foldr)
 import Data.Functor.Coproduct (Coproduct, coproduct, left, right)
 import Data.Functor.Product (Product)

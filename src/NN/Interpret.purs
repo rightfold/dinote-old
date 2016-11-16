@@ -2,7 +2,6 @@ module NN.Interpret
 ( interpret
 ) where
 
-import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Bus as Bus
 import NN.DSL (NNDSLF)
 import NN.Note (Note(..))

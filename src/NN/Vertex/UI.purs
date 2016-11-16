@@ -5,8 +5,8 @@ module NN.Vertex.UI
 , ui
 ) where
 
+import Control.Monad.Aff.Bus as Bus
 import Control.Monad.State.Class as State
-import Control.Monad.Trans.Class (lift)
 import Data.List as List
 import Data.Set (Set)
 import Data.Set as Set
@@ -14,21 +14,30 @@ import Halogen.Component (Component, lifecycleParentComponent, ParentDSL, Parent
 import Halogen.HTML (HTML)
 import Halogen.HTML as H
 import Halogen.Query (action)
+import Halogen.Query.EventSource (eventSource)
+import Halogen.Query.HalogenM (hoistM, subscribe)
 import NN.Note (Note(..))
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID)
-import NN.Vertex.DSL (getVertex, VertexDSLF)
+import NN.Vertex.DSL (getVertex, vertexBus, VertexDSL, VertexDSLF)
 
 type State = Maybe Vertex
 
-newtype Query a
+data Query a
     = Initialize a
+    | Update Vertex a
 
 type Output = Void
 
 type Slot = Int
 
-type Monad eff = Free (Aff eff ⊕ VertexDSLF)
+type Monad eff = Free (Aff (avar :: AVAR | eff) ⊕ VertexDSLF)
+
+mLiftAff :: ∀ eff. Aff (avar :: AVAR | eff) ~> Monad eff
+mLiftAff = liftF <<< left
+
+mLiftVertexDSL :: ∀ eff. VertexDSL ~> Monad eff
+mLiftVertexDSL = hoistFree right
 
 ui :: ∀ eff. VertexID -> Set VertexID -> Component HTML Query Output (Monad eff)
 ui vertexID parentIDs =
@@ -71,8 +80,18 @@ ui vertexID parentIDs =
 
     eval :: Query ~> ParentDSL State Query Query Slot Output (Monad eff)
     eval (Initialize next) = do
-      State.put =<< lift (hoistFree right (getVertex vertexID))
-      pure next
+        State.put =<< lift (mLiftVertexDSL (getVertex vertexID))
+
+        bus <- lift $ mLiftVertexDSL (vertexBus vertexID)
+        hoistM mLiftAff $ subscribe
+            let attach k = void $
+                    runAff (\_ -> pure unit) (\_ -> pure unit) $
+                        forever $ Bus.read bus >>= liftEff <<< k
+                handle a = pure $ Just (action (Update a))
+            in eventSource attach handle
+
+        pure next
+    eval (Update vertex next) = next <$ State.put (Just vertex)
 
     initializer :: Maybe (Query Unit)
     initializer = Just $ action Initialize

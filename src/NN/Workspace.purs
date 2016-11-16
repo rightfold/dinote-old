@@ -22,7 +22,7 @@ type Output = Void
 
 type Slot = Unit
 
-type Monad eff = Free (Aff eff ⊕ NNDSLF)
+type Monad eff = Free (Aff (avar :: AVAR | eff) ⊕ NNDSLF)
 
 ui :: ∀ eff. Component HTML Query Output (Monad eff)
 ui = parentComponent {initialState, render, eval}
