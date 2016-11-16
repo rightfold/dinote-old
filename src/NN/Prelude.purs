@@ -1,7 +1,10 @@
 module NN.Prelude
 ( module Control.Monad.Aff
 , module Control.Monad.Eff
+, module Control.Monad.Free
 , module Data.Foldable
+, module Data.Functor.Coproduct
+, module Data.Functor.Product
 , module Data.Lazy
 , module Data.List
 , module Data.Maybe
@@ -15,8 +18,9 @@ module NN.Prelude
 
 import Control.Monad.Aff (Aff)
 import Control.Monad.Eff (Eff)
+import Control.Monad.Free (foldFree, Free, hoistFree, liftF)
 import Data.Foldable (fold, class Foldable, foldl, foldr)
-import Data.Functor.Coproduct (Coproduct)
+import Data.Functor.Coproduct (Coproduct, coproduct, left, right)
 import Data.Functor.Product (Product)
 import Data.Lazy (defer, force, Lazy)
 import Data.List ((:), List(Nil))

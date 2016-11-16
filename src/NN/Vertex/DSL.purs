@@ -6,7 +6,6 @@ module NN.Vertex.DSL
 ) where
 
 import Control.Monad.Aff.Bus (BusRW)
-import Control.Monad.Free (Free, liftF)
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID)
 
