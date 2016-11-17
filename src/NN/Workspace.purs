@@ -9,7 +9,7 @@ import Data.Set as Set
 import Halogen.Component (Component, parentComponent, ParentDSL, ParentHTML)
 import Halogen.HTML (HTML)
 import Halogen.HTML as H
-import NN.DSL (NNDSLF)
+import NN.DSL (NNDSL)
 import NN.Prelude
 import NN.Vertex (VertexID(..))
 import NN.Vertex.UI as Vertex.UI
@@ -22,7 +22,7 @@ type Output = Void
 
 type Slot = Unit
 
-type Monad eff = Free (Aff (avar :: AVAR | eff) ⊕ NNDSLF)
+type Monad eff = Free (Aff (avar :: AVAR | eff) ⊕ NNDSL)
 
 ui :: ∀ eff. Component HTML Query Output (Monad eff)
 ui = parentComponent {initialState, render, eval}

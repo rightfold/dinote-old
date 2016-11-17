@@ -30,13 +30,13 @@ type Output = Void
 
 type Slot = Int
 
-type Monad eff = Free (Aff (avar :: AVAR | eff) ⊕ VertexDSLF)
+type Monad eff = Free (Aff (avar :: AVAR | eff) ⊕ VertexDSL)
 
 mLiftAff :: ∀ eff. Aff (avar :: AVAR | eff) ~> Monad eff
 mLiftAff = liftF <<< left
 
 mLiftVertexDSL :: ∀ eff. VertexDSL ~> Monad eff
-mLiftVertexDSL = hoistFree right
+mLiftVertexDSL = liftF <<< right
 
 ui :: ∀ eff. VertexID -> Set VertexID -> Component HTML Query Output (Monad eff)
 ui vertexID parentIDs =
