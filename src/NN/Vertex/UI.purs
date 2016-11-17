@@ -11,10 +11,12 @@ import Data.Set (Set)
 import Data.Set as Set
 import Halogen.Component.Bus (busEvents)
 import Halogen.HTML as H
+import Halogen.HTML.Properties as P
 import NN.Prelude.Halogen
 import NN.Vertex (Vertex, VertexID)
 import NN.Vertex.DSL (getVertex, vertexBus, VertexDSL)
 import NN.Vertex.Note (Note(..))
+import NN.Vertex.Style (styleClass)
 
 type State = Maybe Vertex
 
@@ -51,10 +53,10 @@ ui vertexID parentIDs =
 
     renderVertex :: State -> ParentHTML Query Query Slot (Monad eff)
     renderVertex Nothing = H.text "(loading)"
-    renderVertex (Just {note, children}) =
-        H.article []
-            [ H.section [] $ renderNote note
-            , H.section []
+    renderVertex (Just {note, children, style}) =
+        H.article [P.class_ (styleClass style)]
+            [ H.section [P.class_ (ClassName "-note")] $ renderNote note
+            , H.section [P.class_ (ClassName "-children")]
                 [ H.ul [] $
                     children
                     # List.mapWithIndex (flip renderChild)

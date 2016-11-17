@@ -7,7 +7,7 @@ module NN.Prelude.Halogen
 ) where
 
 import Halogen.Component (Component, lifecycleParentComponent, parentComponent, ParentDSL, ParentHTML)
-import Halogen.HTML (HTML)
+import Halogen.HTML (ClassName(..), HTML)
 import Halogen.Query (action)
 import Halogen.Query.HalogenM (hoistM, subscribe)
 import NN.Prelude
