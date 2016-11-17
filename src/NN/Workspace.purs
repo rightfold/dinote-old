@@ -6,11 +6,9 @@ module NN.Workspace
 ) where
 
 import Data.Set as Set
-import Halogen.Component (Component, parentComponent, ParentDSL, ParentHTML)
-import Halogen.HTML (HTML)
 import Halogen.HTML as H
 import NN.DSL (NNDSL)
-import NN.Prelude
+import NN.Prelude.Halogen
 import NN.Vertex (VertexID(..))
 import NN.Vertex.UI as Vertex.UI
 

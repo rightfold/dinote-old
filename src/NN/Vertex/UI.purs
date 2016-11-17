@@ -9,16 +9,12 @@ import Control.Monad.State.Class as State
 import Data.List as List
 import Data.Set (Set)
 import Data.Set as Set
-import Halogen.Component (Component, lifecycleParentComponent, ParentDSL, ParentHTML)
 import Halogen.Component.Bus (busEvents)
-import Halogen.HTML (HTML)
 import Halogen.HTML as H
-import Halogen.Query (action)
-import Halogen.Query.HalogenM (hoistM, subscribe)
 import NN.Note (Note(..))
-import NN.Prelude
+import NN.Prelude.Halogen
 import NN.Vertex (Vertex, VertexID)
-import NN.Vertex.DSL (getVertex, vertexBus, VertexDSL, VertexDSLF)
+import NN.Vertex.DSL (getVertex, vertexBus, VertexDSL)
 
 type State = Maybe Vertex
 
