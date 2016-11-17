@@ -3,8 +3,8 @@ module NN.Vertex
 , Vertex
 ) where
 
-import NN.Note (Note)
 import NN.Prelude
+import NN.Vertex.Note (Note)
 
 newtype VertexID = VertexID String
 

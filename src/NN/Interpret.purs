@@ -6,10 +6,10 @@ module NN.Interpret
 
 import Control.Monad.Aff.Bus as Bus
 import NN.DSL (NNDSL)
-import NN.Note (Note(..))
 import NN.Prelude
 import NN.Vertex (VertexID(..))
 import NN.Vertex.DSL (VertexDSL, VertexDSLF(..))
+import NN.Vertex.Note (Note(..))
 
 interpret
     :: ∀ eff

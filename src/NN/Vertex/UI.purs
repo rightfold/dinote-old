@@ -11,10 +11,10 @@ import Data.Set (Set)
 import Data.Set as Set
 import Halogen.Component.Bus (busEvents)
 import Halogen.HTML as H
-import NN.Note (Note(..))
 import NN.Prelude.Halogen
 import NN.Vertex (Vertex, VertexID)
 import NN.Vertex.DSL (getVertex, vertexBus, VertexDSL)
+import NN.Vertex.Note (Note(..))
 
 type State = Maybe Vertex
 

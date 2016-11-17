@@ -1,4 +1,4 @@
-module NN.Note
+module NN.Vertex.Note
 ( Note(..)
 ) where
 
