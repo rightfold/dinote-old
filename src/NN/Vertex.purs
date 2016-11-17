@@ -12,6 +12,9 @@ newtype VertexID = VertexID String
 derive instance eqVertexID :: Eq VertexID
 derive instance ordVertexID :: Ord VertexID
 
+instance showVertexID :: Show VertexID where
+    show (VertexID v) = "(VertexID " <> show v <> ")"
+
 type Vertex =
     { note :: Note
     , children :: List VertexID

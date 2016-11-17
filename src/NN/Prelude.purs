@@ -16,6 +16,7 @@ module NN.Prelude
 , module Data.Monoid
 , module Data.Traversable
 , module Data.Tuple
+, module Debug.Trace
 , module Prelude
 , type (⊕)
 , type (⊗)
@@ -38,6 +39,7 @@ import Data.Maybe (fromMaybe, Maybe(..), maybe)
 import Data.Monoid (mempty, class Monoid)
 import Data.Traversable (for, for_, class Traversable, traverse, traverse_)
 import Data.Tuple (curry, fst, snd, Tuple(..), uncurry)
+import Debug.Trace (trace, traceShow, traceAny, spy, traceAnyA, traceA, traceShowA, traceAnyM, traceShowM)
 import Prelude
 
 infixr 6 type Coproduct as ⊕
