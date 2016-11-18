@@ -64,17 +64,17 @@ ui vertexID parentIDs =
     renderVertex :: State -> ParentHTML Query Query Slot (Monad eff)
     renderVertex Nothing = H.text "(loading)"
     renderVertex (Just {note, children, style}) =
-        H.article [P.class_ (styleClass style)]
+        H.article [P.classes [ClassName "nn--vertex", styleClass style]]
             [ H.section [P.class_ (ClassName "-note")] $
                 renderNote note
             , H.section [P.class_ (ClassName "-options")]
-                [ H.ul []
+                [ H.ul [P.class_ (ClassName "-style")]
                     [ H.li [] $ renderStyleSelector Normal "Normal"
                     , H.li [] $ renderStyleSelector Dimmed "Dimmed"
                     , H.li [] $ renderStyleSelector Grass "Grass"
                     , H.li [] $ renderStyleSelector Warning "Warning"
                     , H.li [] $ renderStyleSelector Peachpuff "Peachpuff"
-                    , H.li [] $ renderStyleSelector HotDogStand "Hot Dog Stand"
+                    , H.li [] $ renderStyleSelector HotdogStand "Hotdog Stand"
                     ]
                 ]
             , H.section [P.class_ (ClassName "-children")]
@@ -90,7 +90,8 @@ ui vertexID parentIDs =
     renderNote Empty = []
     renderNote (Append a b) = renderNote a <> renderNote b
     renderNote (Text text) =
-        [ H.textarea [ E.onValueChange (Just <<< action <<< EditNote)
+        [ H.textarea [ P.class_ (ClassName "nn--autoresize")
+                     , E.onValueChange (Just <<< action <<< EditNote)
                      , P.value text
                      ]
         ]

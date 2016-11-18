@@ -1,0 +1,137 @@
+@import 'reset';
+
+$gr: 1.61803398875;
+$unit: 12px;
+$unitgr: $unit * $gr;
+
+$styles: (
+    normal: (background: white, color: black),
+    dimmed: (background: #eeeeee, color: #999999),
+    grass: (background: #a0ef94, color: #46703f),
+    warning: (background: yellow, color: black),
+    peachpuff: (background: peachpuff, color: salmon),
+    hotdog-stand: (background: yellow, color: red),
+);
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: $unit;
+
+    margin: $unitgr / 2;
+}
+
+textarea, button {
+    background: transparent;
+    color: inherit;
+
+    border: none;
+    outline: none;
+
+    font: inherit;
+
+    margin: 0;
+    padding: 0;
+}
+
+.nn--vertex {
+    display: flex;
+    flex-wrap: wrap;
+
+    $note-border-width: 2px;
+
+    & > .-note {
+        flex-grow: 1;
+
+        border-radius: $note-border-width;
+
+        margin: 0 $unitgr / 2 0 0;
+
+        > textarea {
+            line-height: $unitgr;
+
+            height: 100%;
+            padding: $unitgr / 2 - $note-border-width;
+            width: 100%;
+
+            resize: none;
+        }
+    }
+
+    @each $name, $style in $styles {
+        &#{'.-style-' + $name} > .-note {
+            background: map-get($style, background);
+            color: map-get($style, color);
+            border: solid $note-border-width map-get($style, color);
+        }
+    }
+
+    & > .-options {
+        flex-basis: $unitgr * 15;
+
+        &:not(:hover) {
+            opacity: 0;
+        }
+
+        & > .-style {
+            display: inline-flex;
+            flex-wrap: wrap;
+
+            margin: -($unitgr / 4);
+
+            & > li {
+                flex: 1;
+
+                margin: $unitgr / 4;
+
+                & > button {
+                    display: block;
+
+                    width: 100%;
+
+                    border-radius: $note-border-width;
+
+                    line-height: $unitgr;
+
+                    padding: $unitgr / 4 - $note-border-width;
+
+                    cursor: pointer;
+
+                    &:hover {
+                        box-shadow: #eeeeee 0 2px 1px;
+                    }
+
+                    &:active {
+                        position: relative;
+                        top: 1px;
+                    }
+                }
+
+                @each $name, $style in $styles {
+                    & > button#{'.-style-' + $name} {
+                        background: map-get($style, background);
+                        color: map-get($style, color);
+                        border: solid $note-border-width map-get($style, color);
+                    }
+                }
+            }
+        }
+    }
+
+    & > .-children {
+        flex-basis: 100%;
+
+        & > ul {
+            padding-left: $unitgr / 2;
+
+            border-left: dotted 1px black;
+
+            & > li {
+                margin-top: $unitgr / 2;
+            }
+        }
+    }
+}

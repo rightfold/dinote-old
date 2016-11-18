@@ -1,4 +1,5 @@
 /.pulp-cache
+/.sass-cache
 /bower_components
 /node_modules
 /output

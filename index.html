@@ -1,40 +1,41 @@
 <!DOCTYPE html>
 <title>nodenote</title>
-<style>
-    textarea {
-        border: none;
-        background: transparent;
-        color: inherit;
-    }
+<link rel="stylesheet" href="output/nn.css">
+<script>
+    (function() {
+        var autoresized = new WeakSet();
 
-    button.-style-normal, .-style-normal > .-note {
-        background: white;
-        color: black;
-    }
+        function autoresize(textarea) {
+            if (autoresized.has(textarea)) {
+                return;
+            }
+            autoresized.add(textarea);
+            function resize() {
+                textarea.style.height = 'auto';
+                textarea.style.height = textarea.scrollHeight + 'px';
+            }
+            function delayedResize() {
+                window.setTimeout(resize, 0);
+            }
+            textarea.addEventListener('input', delayedResize);
+            resize();
+        }
 
-    button.-style-dimmed, .-style-dimmed > .-note {
-        background: white;
-        color: silver;
-    }
+        var observer = new MutationObserver(function(mutations) {
+            for (var i = 0, n = mutations.length; i < n; ++i) {
+                var mutation = mutations[i];
+                var textareas = mutation.target.querySelectorAll('.nn--autoresize');
+                for (var j = 0, m = textareas.length; j < m; ++j) {
+                    var textarea = textareas[j];
+                    autoresize(textarea);
+                }
+            }
+        });
 
-    button.-style-grass, .-style-grass > .-note {
-        background: green;
-        color: white;
-    }
-
-    button.-style-warning, .-style-warning > .-note {
-        background: yellow;
-        color: black;
-    }
-
-    button.-style-peachpuff, .-style-peachpuff > .-note {
-        background: peachpuff;
-        color: salmon;
-    }
-
-    button.-style-hot-dog-stand, .-style-hot-dog-stand > .-note {
-        background: red;
-        color: yellow;
-    }
-</style>
+        observer.observe(document, {
+            subtree: true,
+            childList: true,
+        });
+    })();
+</script>
 <script src="output/nn.js"></script>
