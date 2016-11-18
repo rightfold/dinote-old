@@ -18,19 +18,21 @@ import NN.Prelude.Halogen
 import NN.Vertex (Vertex, VertexID)
 import NN.Vertex.DSL (getVertex, vertexBus, VertexDSL)
 import NN.Vertex.Note (Note(..))
-import NN.Vertex.Style (styleClass)
+import NN.Vertex.Style (Style(..), styleClass)
 
 type State = Maybe Vertex
 
 data Query a
     = Initialize a
     | UpdateVertex Vertex a
-    | UpdateNote String a
+    | EditNote String a
+    | EditStyle Style a
 
 instance functorQuery :: Functor Query where
     map f (Initialize next) = Initialize (f next)
     map f (UpdateVertex vertex next) = UpdateVertex vertex (f next)
-    map f (UpdateNote text next) = UpdateNote text (f next)
+    map f (EditNote text next) = EditNote text (f next)
+    map f (EditStyle style next) = EditStyle style (f next)
 
 type Output = Void
 
@@ -65,6 +67,16 @@ ui vertexID parentIDs =
         H.article [P.class_ (styleClass style)]
             [ H.section [P.class_ (ClassName "-note")] $
                 renderNote note
+            , H.section [P.class_ (ClassName "-options")]
+                [ H.ul []
+                    [ H.li [] $ renderStyleSelector Normal "Normal"
+                    , H.li [] $ renderStyleSelector Dimmed "Dimmed"
+                    , H.li [] $ renderStyleSelector Grass "Grass"
+                    , H.li [] $ renderStyleSelector Warning "Warning"
+                    , H.li [] $ renderStyleSelector Salmon "Slamon"
+                    , H.li [] $ renderStyleSelector HotDogStand "Hot Dog Stand"
+                    ]
+                ]
             , H.section [P.class_ (ClassName "-children")]
                 [ H.ul [] $
                     children
@@ -78,9 +90,17 @@ ui vertexID parentIDs =
     renderNote Empty = []
     renderNote (Append a b) = renderNote a <> renderNote b
     renderNote (Text text) =
-        [ H.textarea [ E.onValueChange (Just <<< action <<< UpdateNote)
+        [ H.textarea [ E.onValueChange (Just <<< action <<< EditNote)
                      , P.value text
                      ]
+        ]
+
+    renderStyleSelector :: ∀ a. Style -> String -> Array (HTML a (Query Unit))
+    renderStyleSelector style name =
+        [ H.button [ P.class_ (styleClass style)
+                   , E.onClick (E.input_ (EditStyle style))
+                   ]
+            [H.text name]
         ]
 
     renderChild :: Slot -> VertexID -> Array (ParentHTML Query Query Slot (Monad eff))
@@ -96,11 +116,19 @@ ui vertexID parentIDs =
             bus <- lift $ mLiftVertexDSL $ vertexBus vertexID
             hoistM mLiftAff $ subscribe (busEvents bus (Just <<< (true <$ _) <<< action <<< UpdateVertex))
     eval (UpdateVertex vertex next) = next <$ State.put (Just vertex)
-    eval (UpdateNote text next) = do
+    eval (EditNote text next) = do
         State.get >>= case _ of
             Nothing -> pure unit
             Just vertex -> do
                 let newVertex = vertex {note = Text text}
+                bus <- lift $ mLiftVertexDSL $ vertexBus vertexID
+                lift $ mLiftAff $ Bus.write newVertex bus
+        pure next
+    eval (EditStyle style next) = do
+        State.get >>= case _ of
+            Nothing -> pure unit
+            Just vertex -> do
+                let newVertex = vertex {style = style}
                 bus <- lift $ mLiftVertexDSL $ vertexBus vertexID
                 lift $ mLiftAff $ Bus.write newVertex bus
         pure next
