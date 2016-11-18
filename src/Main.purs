@@ -3,6 +3,8 @@ module Main
 , main'
 ) where
 
+import Control.Monad.Eff.Ref (newRef)
+import Data.Map as Map
 import Halogen.Component as Halogen.Component
 import Halogen.Util (awaitBody, runHalogenAff)
 import Halogen.VirtualDOM.Driver (runUI)
@@ -15,4 +17,6 @@ main :: ∀ eff. Eff (NNEffects eff) Unit
 main = runHalogenAff main'
 
 main' :: ∀ eff. Aff (NNEffects eff) Unit
-main' = awaitBody >>= runUI (Halogen.Component.interpret NN.Interpret.interpret Workspace.ui) # void
+main' = do
+    busesRef <- liftEff $ newRef Map.empty
+    awaitBody >>= runUI (Halogen.Component.interpret (NN.Interpret.interpret busesRef) Workspace.ui) # void

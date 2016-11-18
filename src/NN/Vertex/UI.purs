@@ -29,8 +29,17 @@ type State =
 data Query a
     = Initialize a
     | UpdateVertex Vertex a
+    | UpdateNote String a
     | ToggleSelfSelection a
     | UpdateSelection (Maybe VertexID) a
+
+instance functorQuery :: Functor Query where
+    map f (Initialize next) = Initialize (f next)
+    map f (UpdateVertex vertex next) = UpdateVertex vertex (f next)
+    map f (UpdateNote text next) = UpdateNote text (f next)
+    map f (ToggleSelfSelection next) = ToggleSelfSelection (f next)
+    map f (UpdateSelection newSelectedVertexID next) =
+        UpdateSelection newSelectedVertexID (f next)
 
 type Output = Void
 
@@ -79,7 +88,12 @@ ui vertexID parentIDs selectedVertexBus =
     renderNote :: ∀ a. Note -> Array (HTML a (Query Unit))
     renderNote Empty = []
     renderNote (Append a b) = renderNote a <> renderNote b
-    renderNote (Text text) = [H.text text]
+    renderNote (Text text) =
+        [ H.textarea [ E.onFocus (E.input_ ToggleSelfSelection)
+                     , E.onValueChange (Just <<< action <<< UpdateNote)
+                     , P.value text
+                     ]
+        ]
 
     renderChild :: Slot -> VertexID -> Array (ParentHTML Query Query Slot (Monad eff))
     renderChild slot childID =
@@ -90,13 +104,21 @@ ui vertexID parentIDs selectedVertexBus =
     eval (Initialize next) = immediate *> subsequent *> selection $> next
         where
         immediate = do
-            vertex <- lift (mLiftVertexDSL (getVertex vertexID))
+            vertex <- lift $ mLiftVertexDSL $ getVertex vertexID
             State.modify _ {vertex = vertex}
         subsequent = do
-            bus <- lift $ mLiftVertexDSL (vertexBus vertexID)
-            hoistM mLiftAff $ subscribe (busEvents bus (Just <<< action <<< UpdateVertex))
-        selection = hoistM mLiftAff $ subscribe (busEvents selectedVertexBus (Just <<< action <<< UpdateSelection))
+            bus <- lift $ mLiftVertexDSL $ vertexBus vertexID
+            hoistM mLiftAff $ subscribe (busEvents bus (Just <<< (true <$ _) <<< action <<< UpdateVertex))
+        selection = hoistM mLiftAff $ subscribe (busEvents selectedVertexBus (Just <<< (true <$ _) <<< action <<< UpdateSelection))
     eval (UpdateVertex vertex next) = next <$ State.modify _ {vertex = Just vertex}
+    eval (UpdateNote text next) = do
+        State.gets _.vertex >>= case _ of
+            Nothing -> pure unit
+            Just vertex -> do
+                let newVertex = vertex {note = Text text}
+                bus <- lift $ mLiftVertexDSL $ vertexBus vertexID
+                lift $ mLiftAff $ Bus.write newVertex bus
+        pure next
     eval (ToggleSelfSelection next) = do
         selfSelected <- State.gets \{selectedVertexID} -> selectedVertexID == Just vertexID
         let newSelection = if selfSelected then Nothing else Just vertexID

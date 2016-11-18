@@ -25,6 +25,11 @@ data Query a
     = Initialize a
     | UpdateSelection (Maybe VertexID) a
 
+instance functorQuery :: Functor Query where
+    map f (Initialize next) = Initialize (f next)
+    map f (UpdateSelection newSelectedVertexID next) =
+        UpdateSelection newSelectedVertexID (f next)
+
 type Output = Void
 
 type Slot = Unit
@@ -57,7 +62,7 @@ ui = lifecycleParentComponent {initialState, render, eval, initializer, finalize
     eval (Initialize next) = do
         selectedVertexBus <- lift (mLiftAff Bus.make)
         State.put $ Just {selectedVertexBus, selectedVertexID: Nothing}
-        hoistM mLiftAff $ subscribe (busEvents selectedVertexBus (Just <<< action <<< UpdateSelection))
+        hoistM mLiftAff $ subscribe (busEvents selectedVertexBus (Just <<< (true <$ _) <<< action <<< UpdateSelection))
         pure next
     eval (UpdateSelection newSelectedVertexID next) =
         next <$ State.modify (_ <#> _ {selectedVertexID = newSelectedVertexID})
