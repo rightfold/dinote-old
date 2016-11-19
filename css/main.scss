@@ -70,6 +70,10 @@ textarea, button {
                 cursor: pointer;
 
                 margin-left: $unitgr / 2;
+
+                &.-active {
+                    background: #eeeeee;
+                }
             }
         }
     }
