@@ -72,7 +72,7 @@ ui vertexID parentIDs =
                     [ H.li [] $ renderStyleSelector Normal "Normal"
                     , H.li [] $ renderStyleSelector Dimmed "Dimmed"
                     , H.li [] $ renderStyleSelector Grass "Grass"
-                    , H.li [] $ renderStyleSelector Warning "Warning"
+                    , H.li [] $ renderStyleSelector Ocean "Ocean"
                     , H.li [] $ renderStyleSelector Peachpuff "Peachpuff"
                     , H.li [] $ renderStyleSelector HotdogStand "Hotdog Stand"
                     ]

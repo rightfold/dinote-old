@@ -8,7 +8,7 @@ $styles: (
     normal: (background: white, color: black),
     dimmed: (background: #eeeeee, color: #999999),
     grass: (background: #a0ef94, color: #46703f),
-    warning: (background: yellow, color: black),
+    ocean: (background: #afd7ff, color: #2e67a0),
     peachpuff: (background: peachpuff, color: salmon),
     hotdog-stand: (background: yellow, color: red),
 );
@@ -96,7 +96,10 @@ textarea, button {
 
                     line-height: $unitgr;
 
-                    padding: $unitgr / 4 - $note-border-width;
+                    padding-top: $unitgr / 4 - $note-border-width;
+                    padding-bottom: $unitgr / 4 - $note-border-width;
+                    padding-left: $unitgr / 2 - $note-border-width;
+                    padding-right: $unitgr / 2 - $note-border-width;
 
                     cursor: pointer;
 

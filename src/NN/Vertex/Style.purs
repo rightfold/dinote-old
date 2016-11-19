@@ -5,12 +5,12 @@ module NN.Vertex.Style
 
 import Halogen.HTML.Core (ClassName(..))
 
-data Style = Normal | Dimmed | Grass | Warning | Peachpuff | HotdogStand
+data Style = Normal | Dimmed | Grass | Ocean | Peachpuff | HotdogStand
 
 styleClass :: Style -> ClassName
 styleClass Normal = ClassName "-style-normal"
 styleClass Dimmed = ClassName "-style-dimmed"
 styleClass Grass = ClassName "-style-grass"
-styleClass Warning = ClassName "-style-warning"
+styleClass Ocean = ClassName "-style-ocean"
 styleClass Peachpuff = ClassName "-style-peachpuff"
 styleClass HotdogStand = ClassName "-style-hotdog-stand"
