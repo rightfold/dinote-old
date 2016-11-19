@@ -20,6 +20,10 @@ module NN.Prelude
 , module Prelude
 , type (⊕)
 , type (⊗)
+, (∈)
+, (\)
+, (∪)
+, (∩)
 ) where
 
 import Control.Monad.Aff (Aff, forkAff, runAff)
@@ -37,6 +41,7 @@ import Data.Lazy (defer, force, Lazy)
 import Data.List ((:), List(Nil))
 import Data.Maybe (fromMaybe, Maybe(..), maybe)
 import Data.Monoid (mempty, class Monoid)
+import Data.Set as Set
 import Data.Traversable (for, for_, class Traversable, traverse, traverse_)
 import Data.Tuple (curry, fst, snd, Tuple(..), uncurry)
 import Debug.Trace (trace, traceShow, traceAny, spy, traceAnyA, traceA, traceShowA, traceAnyM, traceShowM)
@@ -44,3 +49,8 @@ import Prelude
 
 infixr 6 type Coproduct as ⊕
 infixr 7 type Product as ⊗
+
+infix 4 Set.member as ∈
+infixl 6 Set.difference as \
+infixl 6 Set.union as ∪
+infixl 7 Set.intersection as ∩

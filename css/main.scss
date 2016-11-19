@@ -13,6 +13,8 @@ $styles: (
     hotdog-stand: (background: yellow, color: red),
 );
 
+$sidebar-width: $unitgr * 15;
+
 * {
     box-sizing: border-box;
 }
@@ -37,6 +39,47 @@ textarea, button {
     padding: 0;
 }
 
+.nn--workspace {
+    display: flex;
+
+    & > .-file-tree {
+        flex-basis: $sidebar-width;
+        flex-shrink: 0;
+
+        & > ul > li > .-user, & > ul > li > .-files > li {
+            $border-width: 2px;
+
+            line-height: $unitgr;
+
+            border: solid $border-width black;
+            border-radius: $border-width;
+
+            line-height: $unitgr;
+
+            padding-top: $unitgr / 4 - $border-width;
+            padding-bottom: $unitgr / 4 - $border-width;
+            padding-left: $unitgr / 2 - $border-width;
+            padding-right: $unitgr / 2 - $border-width;
+            margin-bottom: $unitgr / 2;
+        }
+
+        & > ul > li > .-files {
+            border-left: dotted 1px black;
+
+            & > li {
+                cursor: pointer;
+
+                margin-left: $unitgr / 2;
+            }
+        }
+    }
+
+    & > .-vertex-tree {
+        flex-grow: 1;
+        padding-left: $unitgr / 2;
+    }
+}
+
 .nn--vertex {
     display: flex;
     flex-wrap: wrap;
@@ -48,7 +91,7 @@ textarea, button {
 
         border-radius: $note-border-width;
 
-        margin: 0 $unitgr / 2 0 0;
+        margin-right: $unitgr;
 
         > textarea {
             line-height: $unitgr;
@@ -70,7 +113,8 @@ textarea, button {
     }
 
     & > .-options {
-        flex-basis: $unitgr * 15;
+        flex-basis: $sidebar-width;
+        flex-shrink: 0;
 
         &:not(:hover) {
             opacity: 0;

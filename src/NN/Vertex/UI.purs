@@ -55,7 +55,7 @@ ui vertexID parentIDs =
 
     render :: State -> ParentHTML Query Query Slot (Monad eff)
     render state
-        | Set.member vertexID parentIDs = renderCycleIndicator
+        | vertexID ∈ parentIDs = renderCycleIndicator
         | otherwise = renderVertex state
 
     renderCycleIndicator :: ParentHTML Query Query Slot (Monad eff)
