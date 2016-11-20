@@ -4,7 +4,6 @@ module NN.Vertex
 ) where
 
 import NN.Prelude
-import NN.Vertex.Note (Note)
 import NN.Vertex.Style (Style)
 
 newtype VertexID = VertexID String
@@ -16,7 +15,7 @@ instance showVertexID :: Show VertexID where
     show (VertexID v) = "(VertexID " <> show v <> ")"
 
 type Vertex =
-    { note :: Note
+    { note :: String
     , children :: List VertexID
     , style :: Style
     }

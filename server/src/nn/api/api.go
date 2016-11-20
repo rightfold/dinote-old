@@ -23,18 +23,24 @@ func (h *Handler) ServeHTTP(res http.ResponseWriter, req *http.Request) {
 	handlers := map[string]func(http.ResponseWriter, *http.Request) (interface{}, error) {
 		"/api/v1/vertices": h.serveVertices,
 	}
-	handler, ok := handlers[req.URL.Path]
-	if !ok {
-		http.Error(res, "Not Found", 404)
-		return
+	switch req.URL.Path {
+	// FIXME: This is a UI, not an API. Move it somewhere else.
+	case "/", "/output/nn.js", "/output/nn.css":
+		http.ServeFile(res, req, "../client" + req.URL.Path)
+	default:
+		handler, ok := handlers[req.URL.Path]
+		if !ok {
+			http.Error(res, "Not Found", 404)
+			return
+		}
+		jres, err := handler(res, req)
+		if err != nil {
+			logrus.WithField("err", err).Error("api")
+			http.Error(res, "Internal Server Error", 500)
+			return
+		}
+		json.NewEncoder(res).Encode(jres)
 	}
-	jres, err := handler(res, req)
-	if err != nil {
-		logrus.WithField("err", err).Error("api")
-		http.Error(res, "Internal Server Error", 500)
-		return
-	}
-	json.NewEncoder(res).Encode(jres)
 }
 
 func (h *Handler) serveVertices(res http.ResponseWriter, req *http.Request) (interface{}, error) {
@@ -53,6 +59,9 @@ func (h *Handler) serveVertices(res http.ResponseWriter, req *http.Request) (int
 	`, id).Scan(&note, &children)
 	if err != nil {
 		return nil, err
+	}
+	if children == nil {
+		children = make(pq.StringArray, 0)
 	}
 	return map[string]interface{}{
 		"note": note,

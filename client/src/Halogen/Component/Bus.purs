@@ -2,6 +2,7 @@ module Halogen.Component.Bus
 ( busEvents
 ) where
 
+import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Bus (Bus)
 import Control.Monad.Aff.Bus as Bus
 import Halogen.Query.EventSource (EventSource, eventSource)

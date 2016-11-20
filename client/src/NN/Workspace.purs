@@ -5,6 +5,7 @@ module NN.Workspace
 , ui
 ) where
 
+import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.State.Class as State
 import Data.List as List
 import Data.Map (Map)
@@ -39,7 +40,7 @@ ui = parentComponent {initialState, render, eval}
     where
     initialState :: State
     initialState =
-        { users: Map.singleton AnonymousID (Set.fromFoldable [VertexID "92eacb4c-a841-4b96-a984-a077caba347c", VertexID "9733d16e-d506-428a-a135-c3e7d886c396"])
+        { users: Map.singleton AnonymousID (Set.fromFoldable [VertexID "016c80f4-2931-4943-aefd-96893dcce572", VertexID "9d7c561e-d02b-4cb3-a24e-83d4adb6de55"])
         , selectedFileID: Nothing
         }
 
@@ -68,9 +69,7 @@ ui = parentComponent {initialState, render, eval}
     renderVertexTree :: State -> Array (ParentHTML Query Vertex.UI.Query Slot (Monad eff))
     renderVertexTree {selectedFileID: Nothing} = [H.text "Select a file!"]
     renderVertexTree {selectedFileID: Just vertexID} =
-        [ let rootID = VertexID "92eacb4c-a841-4b96-a984-a077caba347c"
-          in H.slot vertexID (defer \_ -> Vertex.UI.ui vertexID Set.empty) absurd
-        ]
+        [H.slot vertexID (defer \_ -> Vertex.UI.ui vertexID Set.empty) absurd]
 
     eval :: Query ~> ParentDSL State Query Vertex.UI.Query Slot Output (Monad eff)
     eval (SelectFile vertexID next) =

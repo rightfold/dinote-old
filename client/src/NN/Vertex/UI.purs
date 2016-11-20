@@ -5,6 +5,7 @@ module NN.Vertex.UI
 , ui
 ) where
 
+import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Bus as Bus
 import Control.Monad.State.Class as State
 import Data.List as List
@@ -17,7 +18,6 @@ import Halogen.HTML.Properties as P
 import NN.Prelude.Halogen
 import NN.Vertex (Vertex, VertexID)
 import NN.Vertex.DSL (getVertex, vertexBus, VertexDSL)
-import NN.Vertex.Note (Note(..))
 import NN.Vertex.Style (Style(..), styleClass)
 
 type State = Maybe Vertex
@@ -86,13 +86,11 @@ ui vertexID parentIDs =
                 ]
             ]
 
-    renderNote :: ∀ a. Note -> Array (HTML a (Query Unit))
-    renderNote Empty = []
-    renderNote (Append a b) = renderNote a <> renderNote b
-    renderNote (Text text) =
+    renderNote :: ∀ a. String -> Array (HTML a (Query Unit))
+    renderNote note =
         [ H.textarea [ P.class_ (ClassName "nn--autoresize")
                      , E.onValueChange (Just <<< action <<< EditNote)
-                     , P.value text
+                     , P.value note
                      ]
         ]
 
@@ -117,11 +115,11 @@ ui vertexID parentIDs =
             bus <- lift $ mLiftVertexDSL $ vertexBus vertexID
             hoistM mLiftAff $ subscribe (busEvents bus (Just <<< (true <$ _) <<< action <<< UpdateVertex))
     eval (UpdateVertex vertex next) = next <$ State.put (Just vertex)
-    eval (EditNote text next) = do
+    eval (EditNote note next) = do
         State.get >>= case _ of
             Nothing -> pure unit
             Just vertex -> do
-                let newVertex = vertex {note = Text text}
+                let newVertex = vertex {note = note}
                 bus <- lift $ mLiftVertexDSL $ vertexBus vertexID
                 lift $ mLiftAff $ Bus.write newVertex bus
         pure next
