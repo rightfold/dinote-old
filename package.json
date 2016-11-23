@@ -1,6 +1,7 @@
 {
   "name": "nodenote",
   "dependencies": {
+    "pg": "^6.1.0",
     "virtual-dom": "^2.1.1"
   }
 }

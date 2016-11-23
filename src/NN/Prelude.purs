@@ -26,7 +26,7 @@ module NN.Prelude
 , (∩)
 ) where
 
-import Control.Monad.Aff (Aff, forkAff, runAff)
+import Control.Monad.Aff (Aff, forkAff, launchAff, runAff)
 import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
