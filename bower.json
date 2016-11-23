@@ -18,6 +18,7 @@
     "purescript-debug": "^2.0.0",
     "purescript-maps": "^2.0.1",
     "purescript-affjax": "^3.0.1",
-    "purescript-argonaut-core": "^2.0.1"
+    "purescript-argonaut-core": "^2.0.1",
+    "purescript-aff-bus": "^1.0.0"
   }
 }
