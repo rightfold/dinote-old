@@ -13,6 +13,7 @@ module NN.Prelude
 , module Data.List
 , module Data.Maybe
 , module Data.Monoid
+, module Data.String.CaseInsensitive
 , module Data.Traversable
 , module Data.Tuple
 , module Debug.Trace
@@ -39,6 +40,7 @@ import Data.Lazy (defer, force, Lazy)
 import Data.List ((:), List(Nil))
 import Data.Maybe (fromMaybe, Maybe(..), maybe)
 import Data.Monoid (mempty, class Monoid)
+import Data.String.CaseInsensitive (CaseInsensitiveString(..))
 import Data.Set as Set
 import Data.Traversable (for, for_, class Traversable, traverse, traverse_)
 import Data.Tuple (curry, fst, snd, Tuple(..), uncurry)
