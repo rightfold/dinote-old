@@ -6,12 +6,8 @@ module NN.Interpret
 
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Bus (BusRW)
-import Control.Monad.Aff.Bus as Bus
-import Control.Monad.Eff.Ref (readRef, REF, Ref, writeRef)
 import Data.Argonaut.Core as JSON
 import Data.List as List
-import Data.Map (Map)
-import Data.Map as Map
 import Data.StrMap as StrMap
 import Network.HTTP.Affjax (AJAX)
 import Network.HTTP.Affjax as Affjax
@@ -23,39 +19,30 @@ import NN.Vertex.Style (Style(..))
 
 interpret
     :: ∀ eff
-     . Ref (Map VertexID (BusRW Vertex))
-    -> Free (Aff (ajax :: AJAX, avar :: AVAR, ref :: REF | eff) ⊕ NNDSL)
-    ~> Aff (ajax :: AJAX, avar :: AVAR, ref :: REF | eff)
-interpret busesRef = foldFree (coproduct id (runNNDSL busesRef))
+     . BusRW (Tuple VertexID Vertex)
+    -> Free (Aff (ajax :: AJAX, avar :: AVAR | eff) ⊕ NNDSL)
+    ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
+interpret vertexBus = foldFree (coproduct id (runNNDSL vertexBus))
 
 runNNDSL
     :: ∀ eff
-     . Ref (Map VertexID (BusRW Vertex))
+     . BusRW (Tuple VertexID Vertex)
     -> NNDSL
-    ~> Aff (ajax :: AJAX, avar :: AVAR, ref :: REF | eff)
+    ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
 runNNDSL = runVertexDSL
 
 runVertexDSL
     :: ∀ eff
-     . Ref (Map VertexID (BusRW Vertex))
+     . BusRW (Tuple VertexID Vertex)
     -> VertexDSL
-    ~> Aff (ajax :: AJAX, avar :: AVAR, ref :: REF | eff)
-runVertexDSL busesRef = foldFree go
+    ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
+runVertexDSL vertexBus = foldFree go
     where
-    go :: VertexDSLF ~> Aff (ajax :: AJAX, avar :: AVAR, ref :: REF | eff)
+    go :: VertexDSLF ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
     go (GetVertex (VertexID vertexID) a) = do
         {response} <- Affjax.get ("/api/v1/vertices?vertexID=" <> vertexID)
         pure $ a $
             {note: _, children: _, style: Normal}
                 <$> (response # JSON.toObject >>= StrMap.lookup "note" >>= JSON.toString)
                 <*> (response # JSON.toObject >>= StrMap.lookup "children" >>= JSON.toArray >>= traverse JSON.toString <#> map VertexID <#> List.fromFoldable)
-    go (VertexBus vertexID a) = do
-        freshBus <- Bus.make
-        bus <- liftEff $ do
-            buses <- readRef busesRef
-            case Map.lookup vertexID buses of
-                Nothing -> do
-                    writeRef busesRef $ Map.insert vertexID freshBus buses
-                    pure freshBus
-                Just bus -> pure bus
-        pure $ a bus
+    go (VertexBus a) = pure $ a vertexBus

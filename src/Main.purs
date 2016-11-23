@@ -3,8 +3,7 @@ module Main
 , main'
 ) where
 
-import Control.Monad.Eff.Ref (newRef)
-import Data.Map as Map
+import Control.Monad.Aff.Bus as Bus
 import Network.HTTP.Affjax (AJAX)
 import Halogen.Component as Halogen.Component
 import Halogen.Effects (HalogenEffects)
@@ -19,5 +18,5 @@ main = runHalogenAff main'
 
 main' :: ∀ eff. Aff (HalogenEffects (ajax :: AJAX | eff)) Unit
 main' = do
-    busesRef <- liftEff $ newRef Map.empty
-    awaitBody >>= runUI (Halogen.Component.interpret (NN.Interpret.interpret busesRef) Workspace.ui) # void
+    vertexBus <- Bus.make
+    awaitBody >>= runUI (Halogen.Component.interpret (NN.Interpret.interpret vertexBus) Workspace.ui) # void

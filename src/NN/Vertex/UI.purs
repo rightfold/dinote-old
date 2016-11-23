@@ -112,24 +112,27 @@ ui vertexID parentIDs =
         where
         immediate = State.put =<< lift (mLiftVertexDSL $ getVertex vertexID)
         subsequent = do
-            bus <- lift $ mLiftVertexDSL $ vertexBus vertexID
-            hoistM mLiftAff $ subscribe (busEvents bus (Just <<< (true <$ _) <<< action <<< UpdateVertex))
+            bus <- lift $ mLiftVertexDSL $ vertexBus
+            hoistM mLiftAff $ subscribe $ busEvents bus $ \(Tuple vertexID' vertex) ->
+                if vertexID' == vertexID
+                    then Just $ true <$ action (UpdateVertex vertex)
+                    else Nothing
     eval (UpdateVertex vertex next) = next <$ State.put (Just vertex)
     eval (EditNote note next) = do
         State.get >>= case _ of
             Nothing -> pure unit
             Just vertex -> do
                 let newVertex = vertex {note = note}
-                bus <- lift $ mLiftVertexDSL $ vertexBus vertexID
-                lift $ mLiftAff $ Bus.write newVertex bus
+                bus <- lift $ mLiftVertexDSL $ vertexBus
+                lift $ mLiftAff $ Bus.write (Tuple vertexID newVertex) bus
         pure next
     eval (EditStyle style next) = do
         State.get >>= case _ of
             Nothing -> pure unit
             Just vertex -> do
                 let newVertex = vertex {style = style}
-                bus <- lift $ mLiftVertexDSL $ vertexBus vertexID
-                lift $ mLiftAff $ Bus.write newVertex bus
+                bus <- lift $ mLiftVertexDSL $ vertexBus
+                lift $ mLiftAff $ Bus.write (Tuple vertexID newVertex) bus
         pure next
 
     initializer :: Maybe (Query Unit)
