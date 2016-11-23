@@ -1,4 +1,4 @@
-module Main
+module Main.Client
 ( main
 , main'
 ) where
