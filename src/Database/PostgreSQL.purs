@@ -19,7 +19,7 @@ module Database.PostgreSQL
 
 import Control.Monad.Except (runExcept)
 import Data.Foreign (Foreign, readArray, readString, toForeign)
-import Data.Tuple.Nested ((/\), tuple1, tuple2, tuple3, tuple4, tuple5)
+import Data.Tuple.Nested (tuple1, tuple2, tuple3, tuple4, tuple5)
 import NN.Prelude
 
 foreign import data POSTGRESQL :: !

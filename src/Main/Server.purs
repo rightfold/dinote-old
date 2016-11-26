@@ -3,6 +3,8 @@ module Main.Server
 ) where
 
 import Control.Coroutine (emit)
+import Data.Array as Array
+import Data.Map (Map)
 import Data.Map as Map
 import Data.Sexp as Sexp
 import Database.PostgreSQL (Connection, execute, newPool, Pool, POSTGRESQL, query, withConnection)
@@ -12,7 +14,7 @@ import Node.Buffer as Buffer
 import Node.Encoding (Encoding(UTF8))
 import Node.HTTP (createServer, listen)
 import NN.Prelude
-import NN.Vertex (Vertex(..))
+import NN.Vertex (Vertex(..), VertexID(..))
 import NN.Vertex.Style (Style(..))
 
 main = launchAff do
@@ -38,31 +40,44 @@ handler
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
 handler db req =
     withConnection db \conn -> do
-        result :: Array (Tuple String (Tuple String (Tuple (Array String) Unit))) <- query conn """
+        result <- query conn """
             SELECT
                 v.note,
-                v.style,
                 CASE WHEN count(e.*) = 0 THEN
                     ARRAY[] :: uuid[]
                 ELSE
                     array_agg(e.child_id)
-                END
+                END,
+                v.style
             FROM vertices AS v
             LEFT JOIN edges AS e
                 ON e.parent_id = v.id
             WHERE v.id = $1
             GROUP BY v.id
         """ (Tuple "ab77b629-06b1-4c2e-a1e2-11ec36d778e8" unit)
-        traceA $ show result
-        pure { status: {code: 200, message: "OK"}
-             , headers:
-                Map.empty
-                # Map.insert (CaseInsensitiveString "Content-Type") "application/x-sexp"
-                # Map.insert (CaseInsensitiveString "Access-Control-Allow-Origin") "*"
-             , body:
-                let v = Vertex "Hello, world!" Nil Ocean
-                in emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp v) UTF8
-             }
+        case result of
+            [note /\ children /\ style /\ (_ :: Unit)] ->
+                pure { status: {code: 200, message: "OK"}
+                     , headers:
+                        Map.empty
+                        # Map.insert (CaseInsensitiveString "Content-Type") "application/x-sexp"
+                        # Map.insert (CaseInsensitiveString "Access-Control-Allow-Origin") "*"
+                     , body:
+                        let s = case style of
+                                    "normal              " -> Normal
+                                    "dimmed              " -> Dimmed
+                                    "grass               " -> Grass
+                                    "ocean               " -> Ocean
+                                    "peachpuff           " -> Peachpuff
+                                    "hotdog_stand        " -> HotdogStand
+                                    _ -> Normal
+                            v = Vertex note (Array.toUnfoldable $ map VertexID children) s
+                        in emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp v) UTF8
+                     }
+            _ -> pure { status: {code: 404, message: "Not Found"}
+                      , headers: Map.empty :: Map CaseInsensitiveString String
+                      , body: pure unit
+                      }
 
 setupDB :: ∀ eff. Connection -> Aff (postgreSQL :: POSTGRESQL | eff) Unit
 setupDB conn = do
