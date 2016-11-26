@@ -50,6 +50,8 @@ handle db req =
         ["", "output", "nn.css"] -> static "text/css" "output/nn.css"
         ["", "api", "v1", "vertices"] -> handleCreateVertex db
         ["", "api", "v1", "vertices", vertexID] -> handleVertex db (VertexID vertexID)
+        ["", "api", "v1", "vertices", parentID, "children", childID] ->
+            handleCreateEdge db {parentID: VertexID parentID, childID: VertexID childID}
         _ -> pure notFound
 
 static :: ∀ eff. String -> String -> Aff (fs :: FS | eff) (Response (fs :: FS | eff))
@@ -66,14 +68,33 @@ handleCreateVertex
     -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) (Response (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff))
 handleCreateVertex db =
     withConnection db \conn -> do
-        vertexID <- liftEff $ show <$> UUID.genUUID
+        vertexIDStr <- liftEff $ show <$> UUID.genUUID
         execute conn """
             INSERT INTO vertices (id, note, style)
             VALUES ($1, '', 'normal')
-        """ (vertexID /\ unit)
+        """ (vertexIDStr /\ unit)
+        let vertexID = VertexID vertexIDStr
         pure { status: {code: 200, message: "OK"}
              , headers: Map.empty :: Map CaseInsensitiveString String
-             , body: emit $ unsafePerformEff $ Buffer.fromString vertexID UTF8
+             , body: emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
+             }
+
+handleCreateEdge
+    :: ∀ eff
+     . Pool
+    -> {parentID :: VertexID, childID :: VertexID}
+    -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
+handleCreateEdge db {parentID: VertexID parentID, childID: VertexID childID} =
+    withConnection db \conn -> do
+        execute conn """
+            INSERT INTO edges (parent_id, child_id, index)
+            SELECT $1, $2, coalesce(max(index) + 1, 0)
+            FROM edges
+            WHERE parent_id = $1 AND child_id = $2
+        """ (parentID /\ childID /\ unit)
+        pure { status: {code: 200, message: "OK"}
+             , headers: Map.empty :: Map CaseInsensitiveString String
+             , body: pure unit
              }
 
 handleVertex

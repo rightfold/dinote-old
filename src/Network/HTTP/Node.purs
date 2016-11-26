@@ -17,7 +17,7 @@ nodeHandler
      . (Request (http :: HTTP | eff) -> Aff (http :: HTTP | eff) (Response (http :: HTTP | eff)))
     -> (N.Request -> N.Response -> Eff (http :: HTTP | eff) Unit)
 nodeHandler h nReq nRes =
-    void $ runAff (const $ pure unit) (const $ pure unit) do
+    void $ runAff traceAnyA (const $ pure unit) do
         res <- h {method, path, headers, body}
         liftEff $ N.setStatusCode nRes res.status.code
         liftEff $ N.setStatusMessage nRes res.status.message

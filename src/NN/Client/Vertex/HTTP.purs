@@ -1,7 +1,7 @@
 module NN.Client.Vertex.HTTP
 ( fetchVertex
 , createVertex
-, appendChildVertex
+, createEdge
 ) where
 
 import Control.Monad.Eff.Exception (throw)
@@ -13,22 +13,22 @@ import NN.Vertex (Vertex, VertexID(..))
 
 fetchVertex :: ∀ eff. VertexID -> Aff (ajax :: AJAX | eff) (Maybe Vertex)
 fetchVertex (VertexID vertexID) = do
-    {response} <- Affjax.get ("http://localhost:1337/api/v1/vertices/" <> vertexID)
+    {response} <- Affjax.get ("/api/v1/vertices/" <> vertexID)
     pure $ Sexp.fromString response >>= Sexp.fromSexp
 
 createVertex
     :: ∀ eff
      . Aff (ajax :: AJAX | eff) VertexID
 createVertex = do
-    {response} <- Affjax.post ("http://localhost:1337/api/v1/vertices") unit
+    {response} <- Affjax.post ("/api/v1/vertices") unit
     case Sexp.fromString response >>= Sexp.fromSexp of
         Just vertexID -> pure vertexID
         Nothing -> liftEff' $ throw "could not create vertex"
 
-appendChildVertex
+createEdge
     :: ∀ eff
      . {parentID :: VertexID, childID :: VertexID}
     -> Aff (ajax :: AJAX | eff) Unit
-appendChildVertex {parentID, childID} =
-    -- TODO
-    pure unit
+createEdge {parentID: VertexID parentID, childID: VertexID childID} = do
+    {response} <- Affjax.post ("/api/v1/vertices/" <> parentID <> "/children/" <> childID) unit
+    pure response
