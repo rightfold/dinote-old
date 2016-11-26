@@ -7,6 +7,7 @@ module NN.Prelude
 , module Control.Monad.Free
 , module Control.Monad.Rec.Class
 , module Control.Monad.Trans.Class
+, module Data.Either
 , module Data.Foldable
 , module Data.Functor.Coproduct
 , module Data.Functor.Product
@@ -19,6 +20,7 @@ module NN.Prelude
 , module Data.Traversable
 , module Data.Tuple
 , module Debug.Trace
+, module Partial.Unsafe
 , module Prelude
 , type (⊕)
 , type (⊗)
@@ -36,19 +38,21 @@ import Control.Monad.Eff.Unsafe (unsafeCoerceEff, unsafePerformEff)
 import Control.Monad.Free (foldFree, Free, hoistFree, liftF)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans.Class (lift, class MonadTrans)
+import Data.Either (Either(..))
 import Data.Foldable (fold, class Foldable, foldl, foldr)
 import Data.Functor.Coproduct (Coproduct, coproduct, left, right)
 import Data.Functor.Product (Product)
 import Data.Generic (class Generic, gShow)
 import Data.Lazy (defer, force, Lazy)
 import Data.List ((:), List(Nil))
-import Data.Maybe (fromMaybe, Maybe(..), maybe)
+import Data.Maybe (fromJust, fromMaybe, Maybe(..), maybe)
 import Data.Monoid (mempty, class Monoid)
 import Data.String.CaseInsensitive (CaseInsensitiveString(..))
 import Data.Set as Set
 import Data.Traversable (for, for_, class Traversable, traverse, traverse_)
 import Data.Tuple (curry, fst, snd, Tuple(..), uncurry)
 import Debug.Trace (trace, traceShow, traceAny, spy, traceAnyA, traceA, traceShowA, traceAnyM, traceShowM)
+import Partial.Unsafe (unsafePartial)
 import Prelude
 
 infixr 6 type Coproduct as ⊕

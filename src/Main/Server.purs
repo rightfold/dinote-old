@@ -5,7 +5,7 @@ module Main.Server
 import Control.Coroutine (emit)
 import Data.Map as Map
 import Data.Sexp as Sexp
-import Database.PostgreSQL (newPool, Pool, POSTGRESQL, withConnection)
+import Database.PostgreSQL (newPool, Pool, POSTGRESQL, query, withConnection)
 import Network.HTTP.Message (Request, Response)
 import Network.HTTP.Node (nodeHandler)
 import Node.Buffer as Buffer
@@ -36,6 +36,8 @@ handler
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
 handler db req =
     withConnection db \conn -> do
+        result :: Array (Tuple String Unit) <- query conn "SELECT $1 :: text" (Tuple "hi" unit)
+        traceA $ show result
         pure { status: {code: 200, message: "OK"}
              , headers:
                 Map.empty

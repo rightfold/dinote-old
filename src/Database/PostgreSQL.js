@@ -27,3 +27,23 @@ exports.withConnection = function(pool) {
         };
     };
 };
+
+exports._query = function(client) {
+    return function(sql) {
+        return function(values) {
+            return function(onSuccess, onError) {
+                client.query({
+                    text: sql,
+                    values: values,
+                    rowMode: 'array',
+                }, function(err, result) {
+                    if (err !== null) {
+                        onError(err);
+                        return;
+                    }
+                    onSuccess(result.rows);
+                });
+            };
+        };
+    };
+};
