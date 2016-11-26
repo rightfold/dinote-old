@@ -13,6 +13,7 @@ module Database.PostgreSQL
 , fromSQLValue
 , newPool
 , withConnection
+, execute
 , query
 ) where
 
@@ -107,6 +108,16 @@ foreign import withConnection
      . Pool
     -> (Connection -> Aff (postgreSQL :: POSTGRESQL | eff) a)
     -> Aff (postgreSQL :: POSTGRESQL | eff) a
+
+execute
+    :: ∀ i eff
+     . (ToSQLRow i)
+    => Connection
+    -> String
+    -> i
+    -> Aff (postgreSQL :: POSTGRESQL | eff) Unit
+execute conn sql values =
+    void $ _query conn sql (toSQLRow values)
 
 query
     :: ∀ i o eff
