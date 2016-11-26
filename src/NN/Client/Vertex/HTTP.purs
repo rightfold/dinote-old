@@ -10,5 +10,5 @@ import NN.Vertex (Vertex, VertexID(..))
 
 fetchVertex :: ∀ eff. VertexID -> Aff (ajax :: AJAX | eff) (Maybe Vertex)
 fetchVertex (VertexID vertexID) = do
-    {response} <- Affjax.get ("http://localhost:1337/api/v1/vertices?vertexID=" <> vertexID)
+    {response} <- Affjax.get ("http://localhost:1337/api/v1/vertices/" <> vertexID)
     pure $ Sexp.fromString response >>= Sexp.fromSexp

@@ -40,7 +40,7 @@ ui = parentComponent {initialState, render, eval}
     where
     initialState :: State
     initialState =
-        { users: Map.singleton AnonymousID (Set.fromFoldable [VertexID "016c80f4-2931-4943-aefd-96893dcce572", VertexID "9d7c561e-d02b-4cb3-a24e-83d4adb6de55"])
+        { users: Map.singleton AnonymousID (Set.fromFoldable [VertexID "ab77b629-06b1-4c2e-a1e2-11ec36d778e8", VertexID "86fb5f54-0fc3-4aee-b7ba-df4844d12f18"])
         , selectedFileID: Nothing
         }
 

@@ -7,6 +7,7 @@ import Data.Array as Array
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Sexp as Sexp
+import Data.String as String
 import Database.PostgreSQL (Connection, execute, newPool, Pool, POSTGRESQL, query, withConnection)
 import Network.HTTP.Message (Request, Response)
 import Network.HTTP.Node (nodeHandler)
@@ -30,15 +31,25 @@ main = launchAff do
     withConnection db setupDB
 
     liftEff do
-        server <- createServer $ nodeHandler $ handler db
+        server <- createServer $ nodeHandler $ handle db
         listen server {hostname: "localhost", port: 1337, backlog: Nothing} (pure unit)
 
-handler
+handle
     :: ∀ eff
      . Pool
     -> Request (postgreSQL :: POSTGRESQL | eff)
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
-handler db req =
+handle db req =
+    case String.split (String.Pattern "/") req.path of
+        ["", "api", "v1", "vertices", vertexID] -> handleVertex db (VertexID vertexID)
+        _ -> pure notFound
+
+handleVertex
+    :: ∀ eff
+     . Pool
+    -> VertexID
+    -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
+handleVertex db (VertexID vertexID) =
     withConnection db \conn -> do
         result <- query conn """
             SELECT
@@ -54,7 +65,7 @@ handler db req =
                 ON e.parent_id = v.id
             WHERE v.id = $1
             GROUP BY v.id
-        """ (Tuple "ab77b629-06b1-4c2e-a1e2-11ec36d778e8" unit)
+        """ (Tuple vertexID unit)
         case result of
             [note /\ children /\ style /\ (_ :: Unit)] ->
                 pure { status: {code: 200, message: "OK"}
@@ -74,10 +85,14 @@ handler db req =
                             v = Vertex note (Array.toUnfoldable $ map VertexID children) s
                         in emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp v) UTF8
                      }
-            _ -> pure { status: {code: 404, message: "Not Found"}
-                      , headers: Map.empty :: Map CaseInsensitiveString String
-                      , body: pure unit
-                      }
+            _ -> pure notFound
+
+notFound :: ∀ eff. Response eff
+notFound =
+    { status: {code: 404, message: "Not Found"}
+    , headers: Map.empty :: Map CaseInsensitiveString String
+    , body: pure unit
+    }
 
 setupDB :: ∀ eff. Connection -> Aff (postgreSQL :: POSTGRESQL | eff) Unit
 setupDB conn = do
