@@ -46,7 +46,7 @@ handler db req =
                 CASE WHEN count(e.*) = 0 THEN
                     ARRAY[] :: uuid[]
                 ELSE
-                    array_agg(e.child_id)
+                    array_agg(e.child_id ORDER BY e.index ASC)
                 END,
                 v.style
             FROM vertices AS v
@@ -110,7 +110,8 @@ setupDB conn = do
         CREATE TABLE IF NOT EXISTS edges (
             parent_id   uuid        NOT NULL,
             child_id    uuid        NOT NULL,
-            PRIMARY KEY (parent_id, child_id),
+            index       int         NOT NULL,
+            PRIMARY KEY (parent_id, child_id, index),
             FOREIGN KEY (parent_id)
                 REFERENCES vertices(id)
                 ON DELETE CASCADE,
