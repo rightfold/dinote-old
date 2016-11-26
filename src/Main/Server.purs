@@ -8,6 +8,7 @@ import Data.Map (Map)
 import Data.Map as Map
 import Data.Sexp as Sexp
 import Data.String as String
+import Data.UUID (GENUUID)
 import Data.UUID as UUID
 import Database.PostgreSQL (Connection, execute, newPool, Pool, POSTGRESQL, query, withConnection)
 import Network.HTTP.Message (Request, Response)
@@ -40,8 +41,8 @@ main = launchAff do
 handle
     :: ∀ eff
      . Pool
-    -> Request (fs :: FS, postgreSQL :: POSTGRESQL | eff)
-    -> Aff (fs :: FS, postgreSQL :: POSTGRESQL | eff) (Response (fs :: FS, postgreSQL :: POSTGRESQL | eff))
+    -> Request (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff)
+    -> Aff (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) (Response (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff))
 handle db req =
     case String.split (String.Pattern "/") req.path of
         ["", ""] -> static "text/html" "index.html"
@@ -62,10 +63,10 @@ static mime path = do
 handleCreateVertex
     :: ∀ eff
      . Pool
-    -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
+    -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) (Response (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff))
 handleCreateVertex db =
     withConnection db \conn -> do
-        vertexID <- liftEff $ unsafeCoerceEff $ show <$> UUID.genUUID
+        vertexID <- liftEff $ show <$> UUID.genUUID
         execute conn """
             INSERT INTO vertices (id, note, style)
             VALUES ($1, '', 'normal')
