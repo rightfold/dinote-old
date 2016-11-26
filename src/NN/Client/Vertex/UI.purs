@@ -17,7 +17,7 @@ import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
 import NN.Client.Vertex.DSL (getVertex, vertexBus, VertexDSL)
 import NN.Prelude.Halogen
-import NN.Vertex (Vertex, VertexID)
+import NN.Vertex (Vertex(..), VertexID)
 import NN.Vertex.Style (Style(..))
 
 type State = Maybe Vertex
@@ -63,7 +63,7 @@ ui vertexID parentIDs =
 
     renderVertex :: State -> ParentHTML Query Query Slot (Monad eff)
     renderVertex Nothing = H.text "(loading)"
-    renderVertex (Just {note, children, style}) =
+    renderVertex (Just (Vertex note children style)) =
         H.article [P.classes [ClassName "nn--vertex", styleClass style]]
             [ H.section [P.class_ (ClassName "-note")] $
                 renderNote note
@@ -121,16 +121,16 @@ ui vertexID parentIDs =
     eval (EditNote note next) = do
         State.get >>= case _ of
             Nothing -> pure unit
-            Just vertex -> do
-                let newVertex = vertex {note = note}
+            Just (Vertex _ children style) -> do
+                let newVertex = (Vertex note children style)
                 bus <- lift $ mLiftVertexDSL $ vertexBus
                 lift $ mLiftAff $ Bus.write (Tuple vertexID newVertex) bus
         pure next
     eval (EditStyle style next) = do
         State.get >>= case _ of
             Nothing -> pure unit
-            Just vertex -> do
-                let newVertex = vertex {style = style}
+            Just (Vertex note children _) -> do
+                let newVertex = (Vertex note children style)
                 bus <- lift $ mLiftVertexDSL $ vertexBus
                 lift $ mLiftAff $ Bus.write (Tuple vertexID newVertex) bus
         pure next

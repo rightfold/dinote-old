@@ -3,12 +3,14 @@ module NN.Prelude
 , module Control.Monad.Aff.Class
 , module Control.Monad.Eff
 , module Control.Monad.Eff.Class
+, module Control.Monad.Eff.Unsafe
 , module Control.Monad.Free
 , module Control.Monad.Rec.Class
 , module Control.Monad.Trans.Class
 , module Data.Foldable
 , module Data.Functor.Coproduct
 , module Data.Functor.Product
+, module Data.Generic
 , module Data.Lazy
 , module Data.List
 , module Data.Maybe
@@ -30,12 +32,14 @@ import Control.Monad.Aff (Aff, forkAff, launchAff, runAff)
 import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Unsafe (unsafeCoerceEff, unsafePerformEff)
 import Control.Monad.Free (foldFree, Free, hoistFree, liftF)
 import Control.Monad.Rec.Class (forever)
 import Control.Monad.Trans.Class (lift, class MonadTrans)
 import Data.Foldable (fold, class Foldable, foldl, foldr)
 import Data.Functor.Coproduct (Coproduct, coproduct, left, right)
 import Data.Functor.Product (Product)
+import Data.Generic (class Generic, gShow)
 import Data.Lazy (defer, force, Lazy)
 import Data.List ((:), List(Nil))
 import Data.Maybe (fromMaybe, Maybe(..), maybe)
