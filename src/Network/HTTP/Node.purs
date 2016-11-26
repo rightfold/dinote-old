@@ -18,7 +18,7 @@ nodeHandler
     -> (N.Request -> N.Response -> Eff (http :: HTTP | eff) Unit)
 nodeHandler h nReq nRes =
     void $ runAff (const $ pure unit) (const $ pure unit) do
-        res <- h {method, headers, body}
+        res <- h {method, path, headers, body}
         liftEff $ N.setStatusCode nRes res.status.code
         liftEff $ N.setStatusMessage nRes res.status.message
         for_ (Map.toList res.headers) \(Tuple (CaseInsensitiveString k) v) ->
@@ -30,6 +30,7 @@ nodeHandler h nReq nRes =
         makeAff \_ ok -> Stream.end nResBody (ok unit)
     where
     method = CaseInsensitiveString (N.requestMethod nReq)
+    path = N.requestURL nReq
     headers =
         N.requestHeaders nReq
         # StrMap.toList

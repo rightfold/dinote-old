@@ -12,6 +12,7 @@ import Prelude
 
 type Request eff =
     { method :: CaseInsensitiveString
+    , path :: String
     , headers :: Map CaseInsensitiveString String
     , body :: Producer Buffer (Aff eff) Unit
     }
