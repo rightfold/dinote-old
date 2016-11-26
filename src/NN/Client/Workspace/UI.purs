@@ -1,4 +1,4 @@
-module NN.Workspace
+module NN.Client.Workspace.UI
 ( Query
 , Output
 , Monad
@@ -16,10 +16,10 @@ import Halogen.HTML as H
 import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
 import NN.Auth (UserID(..))
-import NN.DSL (NNDSL)
+import NN.Client.DSL (NNDSL)
+import NN.Client.Vertex.UI as Vertex.UI
 import NN.Prelude.Halogen
 import NN.Vertex (VertexID(..))
-import NN.Vertex.UI as Vertex.UI
 
 type State =
     { users :: Map UserID (Set VertexID)

@@ -9,9 +9,9 @@ import Halogen.Component as Halogen.Component
 import Halogen.Effects (HalogenEffects)
 import Halogen.Util (awaitBody, runHalogenAff)
 import Halogen.VirtualDOM.Driver (runUI)
-import NN.Interpret as NN.Interpret
+import NN.Client.DSL.Interpret (interpret)
+import NN.Client.Workspace.UI as Workspace.UI
 import NN.Prelude
-import NN.Workspace as Workspace
 
 main :: ∀ eff. Eff (HalogenEffects (ajax :: AJAX | eff)) Unit
 main = runHalogenAff main'
@@ -19,4 +19,4 @@ main = runHalogenAff main'
 main' :: ∀ eff. Aff (HalogenEffects (ajax :: AJAX | eff)) Unit
 main' = do
     vertexBus <- Bus.make
-    awaitBody >>= runUI (Halogen.Component.interpret (NN.Interpret.interpret vertexBus) Workspace.ui) # void
+    awaitBody >>= runUI (Halogen.Component.interpret (interpret vertexBus) Workspace.UI.ui) # void

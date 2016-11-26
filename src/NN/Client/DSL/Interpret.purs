@@ -1,4 +1,4 @@
-module NN.Interpret
+module NN.Client.DSL.Interpret
 ( interpret
 , runNNDSL
 , runVertexDSL
@@ -7,11 +7,11 @@ module NN.Interpret
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Bus (BusRW)
 import Network.HTTP.Affjax (AJAX)
-import NN.DSL (NNDSL)
+import NN.Client.DSL (NNDSL)
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID)
-import NN.Vertex.Client (fetchVertex)
-import NN.Vertex.DSL (VertexDSL, VertexDSLF(..))
+import NN.Client.Vertex.HTTP (fetchVertex)
+import NN.Client.Vertex.DSL (VertexDSL, VertexDSLF(..))
 
 interpret
     :: ∀ eff

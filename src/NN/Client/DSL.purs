@@ -1,10 +1,10 @@
-module NN.DSL
+module NN.Client.DSL
 ( NNDSL
 , NNDSLF
 ) where
 
+import NN.Client.Vertex.DSL (VertexDSLF)
 import NN.Prelude
-import NN.Vertex.DSL (VertexDSLF)
 
 type NNDSL = Free NNDSLF
 

@@ -1,4 +1,4 @@
-module NN.Vertex.UI
+module NN.Client.Vertex.UI
 ( Query
 , Output
 , Monad
@@ -15,10 +15,10 @@ import Halogen.Component.Bus (busEvents)
 import Halogen.HTML as H
 import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
+import NN.Client.Vertex.DSL (getVertex, vertexBus, VertexDSL)
 import NN.Prelude.Halogen
 import NN.Vertex (Vertex, VertexID)
-import NN.Vertex.DSL (getVertex, vertexBus, VertexDSL)
-import NN.Vertex.Style (Style(..), styleClass)
+import NN.Vertex.Style (Style(..))
 
 type State = Maybe Vertex
 
@@ -140,3 +140,11 @@ ui vertexID parentIDs =
 
     finalizer :: Maybe (Query Unit)
     finalizer = Nothing
+
+styleClass :: Style -> ClassName
+styleClass Normal = ClassName "-style-normal"
+styleClass Dimmed = ClassName "-style-dimmed"
+styleClass Grass = ClassName "-style-grass"
+styleClass Ocean = ClassName "-style-ocean"
+styleClass Peachpuff = ClassName "-style-peachpuff"
+styleClass HotdogStand = ClassName "-style-hotdog-stand"

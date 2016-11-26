@@ -1,4 +1,4 @@
-module NN.Vertex.Client
+module NN.Client.Vertex.HTTP
 ( fetchVertex
 ) where
 

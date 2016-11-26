@@ -1,4 +1,4 @@
-module NN.Vertex.DSL
+module NN.Client.Vertex.DSL
 ( VertexDSL
 , VertexDSLF(..)
 , getVertex
