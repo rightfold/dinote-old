@@ -18,7 +18,7 @@ module Database.PostgreSQL
 ) where
 
 import Control.Monad.Except (runExcept)
-import Data.Foreign (Foreign, readString, toForeign)
+import Data.Foreign (Foreign, readArray, readString, toForeign)
 import Data.Tuple.Nested ((/\), tuple1, tuple2, tuple3, tuple4, tuple5)
 import NN.Prelude
 
@@ -97,6 +97,9 @@ instance toSQLValueString :: ToSQLValue String where
 
 instance fromSQLValueString :: FromSQLValue String where
     fromSQLValue = fromRight <<< runExcept <<< readString
+
+instance fromSQLValueArray :: (FromSQLValue a) => FromSQLValue (Array a) where
+    fromSQLValue = traverse fromSQLValue <=< fromRight <<< runExcept <<< readArray
 
 foreign import newPool
     :: ∀ eff

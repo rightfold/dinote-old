@@ -38,7 +38,21 @@ handler
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
 handler db req =
     withConnection db \conn -> do
-        result :: Array (Tuple String Unit) <- query conn "SELECT $1 :: text" (Tuple "hi" unit)
+        result :: Array (Tuple String (Tuple String (Tuple (Array String) Unit))) <- query conn """
+            SELECT
+                v.note,
+                v.style,
+                CASE WHEN count(e.*) = 0 THEN
+                    ARRAY[] :: uuid[]
+                ELSE
+                    array_agg(e.child_id)
+                END
+            FROM vertices AS v
+            LEFT JOIN edges AS e
+                ON e.parent_id = v.id
+            WHERE v.id = $1
+            GROUP BY v.id
+        """ (Tuple "ab77b629-06b1-4c2e-a1e2-11ec36d778e8" unit)
         traceA $ show result
         pure { status: {code: 200, message: "OK"}
              , headers:
