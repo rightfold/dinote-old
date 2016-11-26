@@ -39,6 +39,19 @@ textarea, button {
     padding: 0;
 }
 
+@mixin button {
+    cursor: pointer;
+
+    &:hover {
+        box-shadow: #eeeeee 0 2px 1px;
+    }
+
+    &:active {
+        position: relative;
+        top: 1px;
+    }
+}
+
 .nn--workspace {
     display: flex;
 
@@ -70,6 +83,8 @@ textarea, button {
                 cursor: pointer;
 
                 margin-left: $unitgr / 2;
+
+                @include button;
 
                 &.-active {
                     background: #eeeeee;
@@ -149,16 +164,7 @@ textarea, button {
                     padding-left: $unitgr / 2 - $note-border-width;
                     padding-right: $unitgr / 2 - $note-border-width;
 
-                    cursor: pointer;
-
-                    &:hover {
-                        box-shadow: #eeeeee 0 2px 1px;
-                    }
-
-                    &:active {
-                        position: relative;
-                        top: 1px;
-                    }
+                    @include button;
                 }
 
                 @each $name, $style in $styles {
