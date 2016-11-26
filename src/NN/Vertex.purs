@@ -12,6 +12,9 @@ newtype VertexID = VertexID String
 derive instance genericVertexID :: Generic VertexID
 derive instance eqVertexID :: Eq VertexID
 derive instance ordVertexID :: Ord VertexID
+instance fromSexpVertexID :: FromSexp VertexID where fromSexp = gFromSexp
+instance toSexpVertexID :: ToSexp VertexID where toSexp = gToSexp
+instance asSexpVertexID :: AsSexp VertexID
 instance showVertexID :: Show VertexID where show = gShow
 
 data Vertex = Vertex String (List VertexID) Style

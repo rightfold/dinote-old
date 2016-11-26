@@ -29,12 +29,14 @@ module NN.Prelude
 , (\)
 , (∪)
 , (∩)
+, liftEff'
 ) where
 
 import Control.Monad.Aff (Aff, forkAff, launchAff, runAff)
 import Control.Monad.Aff.Class (class MonadAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
+import Control.Monad.Eff.Exception (EXCEPTION)
 import Control.Monad.Eff.Unsafe (unsafeCoerceEff, unsafePerformEff)
 import Control.Monad.Free (foldFree, Free, hoistFree, liftF)
 import Control.Monad.Rec.Class (forever)
@@ -64,3 +66,6 @@ infix 4 Set.member as ∈
 infixl 6 Set.difference as \
 infixl 6 Set.union as ∪
 infixl 7 Set.intersection as ∩
+
+liftEff' :: ∀ a eff. Eff (err :: EXCEPTION | eff) a -> Aff eff a
+liftEff' = liftEff <<< unsafeCoerceEff

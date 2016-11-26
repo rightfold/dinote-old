@@ -8,6 +8,7 @@ import Data.Map (Map)
 import Data.Map as Map
 import Data.Sexp as Sexp
 import Data.String as String
+import Data.UUID as UUID
 import Database.PostgreSQL (Connection, execute, newPool, Pool, POSTGRESQL, query, withConnection)
 import Network.HTTP.Message (Request, Response)
 import Network.HTTP.Node (nodeHandler)
@@ -41,8 +42,28 @@ handle
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
 handle db req =
     case String.split (String.Pattern "/") req.path of
+        ["", "api", "v1", "vertices"] -> handleCreateVertex db
         ["", "api", "v1", "vertices", vertexID] -> handleVertex db (VertexID vertexID)
         _ -> pure notFound
+
+handleCreateVertex
+    :: ∀ eff
+     . Pool
+    -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
+handleCreateVertex db =
+    withConnection db \conn -> do
+        vertexID <- liftEff $ unsafeCoerceEff $ show <$> UUID.genUUID
+        execute conn """
+            INSERT INTO vertices (id, note, style)
+            VALUES ($1, '', 'normal')
+        """ (vertexID /\ unit)
+        pure { status: {code: 200, message: "OK"}
+             , headers:
+                Map.empty
+                # Map.insert (CaseInsensitiveString "Access-Control-Allow-Origin") "*"
+                # Map.insert (CaseInsensitiveString "Access-Control-Allow-Methods") "GET, PUT, POST, DELETE, OPTIONS"
+             , body: emit $ unsafePerformEff $ Buffer.fromString vertexID UTF8
+             }
 
 handleVertex
     :: ∀ eff
@@ -65,7 +86,7 @@ handleVertex db (VertexID vertexID) =
                 ON e.parent_id = v.id
             WHERE v.id = $1
             GROUP BY v.id
-        """ (Tuple vertexID unit)
+        """ (vertexID /\ unit)
         case result of
             [note /\ children /\ style /\ (_ :: Unit)] ->
                 pure { status: {code: 200, message: "OK"}

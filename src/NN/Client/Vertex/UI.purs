@@ -15,7 +15,7 @@ import Halogen.Component.Bus (busEvents)
 import Halogen.HTML as H
 import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
-import NN.Client.Vertex.DSL (getVertex, vertexBus, VertexDSL)
+import NN.Client.Vertex.DSL (getVertex, newVertex, vertexBus, VertexDSL)
 import NN.Prelude.Halogen
 import NN.Vertex (Vertex(..), VertexID)
 import NN.Vertex.Style (Style(..))
@@ -27,12 +27,14 @@ data Query a
     | UpdateVertex Vertex a
     | EditNote String a
     | EditStyle Style a
+    | AddNewVertex a
 
 instance functorQuery :: Functor Query where
     map f (Initialize next) = Initialize (f next)
     map f (UpdateVertex vertex next) = UpdateVertex vertex (f next)
     map f (EditNote text next) = EditNote text (f next)
     map f (EditStyle style next) = EditStyle style (f next)
+    map f (AddNewVertex next) = AddNewVertex (f next)
 
 type Output = Void
 
@@ -76,6 +78,7 @@ ui vertexID parentIDs =
                     , H.li [] $ renderStyleSelector Peachpuff "Peachpuff"
                     , H.li [] $ renderStyleSelector HotdogStand "Hotdog Stand"
                     ]
+                , H.button [E.onClick (E.input_ AddNewVertex)] [H.text "Add New Vertex"]
                 ]
             , H.section [P.class_ (ClassName "-children")]
                 [ H.ul [] $
@@ -135,6 +138,9 @@ ui vertexID parentIDs =
                 let newVertex = (Vertex note children style)
                 bus <- lift $ mLiftVertexDSL $ vertexBus
                 lift $ mLiftAff $ Bus.write (Tuple vertexID newVertex) bus
+        pure next
+    eval (AddNewVertex next) = do
+        lift $ mLiftVertexDSL $ newVertex (vertexID : Nil)
         pure next
 
     initializer :: Maybe (Query Unit)
