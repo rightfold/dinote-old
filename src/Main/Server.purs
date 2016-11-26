@@ -14,6 +14,8 @@ import Network.HTTP.Message (Request, Response)
 import Network.HTTP.Node (nodeHandler)
 import Node.Buffer as Buffer
 import Node.Encoding (Encoding(UTF8))
+import Node.FS (FS)
+import Node.FS.Sync (readFile)
 import Node.HTTP (createServer, listen)
 import NN.Prelude
 import NN.Vertex (Vertex(..), VertexID(..))
@@ -38,13 +40,24 @@ main = launchAff do
 handle
     :: ∀ eff
      . Pool
-    -> Request (postgreSQL :: POSTGRESQL | eff)
-    -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
+    -> Request (fs :: FS, postgreSQL :: POSTGRESQL | eff)
+    -> Aff (fs :: FS, postgreSQL :: POSTGRESQL | eff) (Response (fs :: FS, postgreSQL :: POSTGRESQL | eff))
 handle db req =
     case String.split (String.Pattern "/") req.path of
+        ["", ""] -> static "text/html" "index.html"
+        ["", "output", "nn.js"] -> static "application/javascript" "output/nn.js"
+        ["", "output", "nn.css"] -> static "text/css" "output/nn.css"
         ["", "api", "v1", "vertices"] -> handleCreateVertex db
         ["", "api", "v1", "vertices", vertexID] -> handleVertex db (VertexID vertexID)
         _ -> pure notFound
+
+static :: ∀ eff. String -> String -> Aff (fs :: FS | eff) (Response (fs :: FS | eff))
+static mime path = do
+    contents <- liftEff' $ readFile path
+    pure { status: {code: 200, message: "OK"}
+         , headers: Map.singleton (CaseInsensitiveString "content-type") mime
+         , body: emit contents
+         }
 
 handleCreateVertex
     :: ∀ eff
@@ -58,10 +71,7 @@ handleCreateVertex db =
             VALUES ($1, '', 'normal')
         """ (vertexID /\ unit)
         pure { status: {code: 200, message: "OK"}
-             , headers:
-                Map.empty
-                # Map.insert (CaseInsensitiveString "Access-Control-Allow-Origin") "*"
-                # Map.insert (CaseInsensitiveString "Access-Control-Allow-Methods") "GET, PUT, POST, DELETE, OPTIONS"
+             , headers: Map.empty :: Map CaseInsensitiveString String
              , body: emit $ unsafePerformEff $ Buffer.fromString vertexID UTF8
              }
 
@@ -90,10 +100,7 @@ handleVertex db (VertexID vertexID) =
         case result of
             [note /\ children /\ style /\ (_ :: Unit)] ->
                 pure { status: {code: 200, message: "OK"}
-                     , headers:
-                        Map.empty
-                        # Map.insert (CaseInsensitiveString "Content-Type") "application/x-sexp"
-                        # Map.insert (CaseInsensitiveString "Access-Control-Allow-Origin") "*"
+                     , headers: Map.empty :: Map CaseInsensitiveString String
                      , body:
                         let s = case style of
                                     "normal              " -> Normal
