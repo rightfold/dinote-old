@@ -90,7 +90,7 @@ handleCreateEdge db {parentID: VertexID parentID, childID: VertexID childID} =
             INSERT INTO edges (parent_id, child_id, index)
             SELECT $1, $2, coalesce(max(index) + 1, 0)
             FROM edges
-            WHERE parent_id = $1 AND child_id = $2
+            WHERE parent_id = $1
         """ (parentID /\ childID /\ unit)
         pure { status: {code: 200, message: "OK"}
              , headers: Map.empty :: Map CaseInsensitiveString String
@@ -176,7 +176,7 @@ setupDB conn = do
             parent_id   uuid        NOT NULL,
             child_id    uuid        NOT NULL,
             index       int         NOT NULL,
-            PRIMARY KEY (parent_id, child_id, index),
+            PRIMARY KEY (parent_id, index),
             FOREIGN KEY (parent_id)
                 REFERENCES vertices(id)
                 ON DELETE CASCADE,
