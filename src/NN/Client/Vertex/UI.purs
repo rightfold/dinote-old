@@ -55,7 +55,7 @@ ui vertexID parentIDs =
 
     render :: State -> ParentHTML Query Query Slot (Monad eff)
     render state
-        | vertexID ∈ parentIDs = renderCycleIndicator
+        | isCycle = renderCycleIndicator
         | otherwise = renderVertex state
 
     renderCycleIndicator :: ParentHTML Query Query Slot (Monad eff)
@@ -108,7 +108,9 @@ ui vertexID parentIDs =
         in [H.slot slot childComponent absurd]
 
     eval :: Query ~> ParentDSL State Query Query Slot Output (Monad eff)
-    eval (Initialize next) = immediate *> subsequent $> next
+    eval (Initialize next)
+        | isCycle = pure next
+        | otherwise = immediate *> subsequent $> next
         where
         immediate = State.put =<< lift (mLiftVertexDSL $ getVertex vertexID)
         subsequent = do
@@ -140,6 +142,9 @@ ui vertexID parentIDs =
 
     finalizer :: Maybe (Query Unit)
     finalizer = Nothing
+
+    isCycle :: Boolean
+    isCycle = vertexID ∈ parentIDs
 
 styleClass :: Style -> ClassName
 styleClass Normal = ClassName "-style-normal"
