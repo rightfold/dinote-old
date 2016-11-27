@@ -19,4 +19,8 @@ main = runHalogenAff main'
 main' :: ∀ eff. Aff (HalogenEffects (ajax :: AJAX | eff)) Unit
 main' = do
     vertexBus <- Bus.make
+    forkAff $ forever do
+        Tuple vertexID vertex <- Bus.read vertexBus
+        traceAnyA vertexID
+        traceAnyA vertex
     awaitBody >>= runUI (Halogen.Component.interpret (interpret vertexBus) Workspace.UI.ui) # void
