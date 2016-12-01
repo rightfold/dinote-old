@@ -12,6 +12,7 @@ import Control.Monad.State.Class as State
 import Control.Monad.Trans.Class (lift)
 import Data.Functor.Coproduct (left, right)
 import Data.Lazy (defer)
+import Data.Lens ((.~))
 import Data.List as List
 import Data.Set (Set)
 import Data.Set as Set
@@ -21,7 +22,7 @@ import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
 import NN.Client.Vertex.DSL (getVertex, newVertex, vertexBus, VertexDSL)
 import NN.Prelude.Halogen
-import NN.Vertex (Vertex(..), VertexID)
+import NN.Vertex (Vertex(..), VertexID, vertexNote, vertexStyle)
 import NN.Vertex.Style (Style(..))
 
 type State = Maybe Vertex
@@ -94,7 +95,7 @@ ui vertexID parentIDs =
     renderNote :: ∀ a. String -> Array (HTML a (Query Unit))
     renderNote note =
         [ H.textarea [ P.class_ (ClassName "nn--autoresize")
-                     , E.onValueChange (\n -> Just $ action $ ModifyVertex \(Vertex _ c s) -> Vertex n c s)
+                     , E.onValueChange (Just <<< action <<< ModifyVertex <<< (vertexNote .~ _))
                      , P.value note
                      ]
         ]
@@ -102,7 +103,7 @@ ui vertexID parentIDs =
     renderStyleSelector :: ∀ a. Style -> String -> Array (HTML a (Query Unit))
     renderStyleSelector style name =
         [ H.button [ P.class_ (styleClass style)
-                   , E.onClick (E.input_ (ModifyVertex \(Vertex n c _) -> Vertex n c style))
+                   , E.onClick (E.input_ (ModifyVertex $ vertexStyle .~ style))
                    ]
             [H.text name]
         ]
