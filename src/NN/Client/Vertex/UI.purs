@@ -29,15 +29,13 @@ type State = Maybe Vertex
 data Query a
     = Initialize a
     | UpdateVertex Vertex a
-    | EditNote String a
-    | EditStyle Style a
+    | ModifyVertex (Vertex -> Vertex) a
     | AddNewVertex a
 
 instance functorQuery :: Functor Query where
     map f (Initialize next) = Initialize (f next)
     map f (UpdateVertex vertex next) = UpdateVertex vertex (f next)
-    map f (EditNote text next) = EditNote text (f next)
-    map f (EditStyle style next) = EditStyle style (f next)
+    map f (ModifyVertex func next) = ModifyVertex func (f next)
     map f (AddNewVertex next) = AddNewVertex (f next)
 
 type Output = Void
@@ -96,7 +94,7 @@ ui vertexID parentIDs =
     renderNote :: ∀ a. String -> Array (HTML a (Query Unit))
     renderNote note =
         [ H.textarea [ P.class_ (ClassName "nn--autoresize")
-                     , E.onValueChange (Just <<< action <<< EditNote)
+                     , E.onValueChange (\n -> Just $ action $ ModifyVertex \(Vertex _ c s) -> Vertex n c s)
                      , P.value note
                      ]
         ]
@@ -104,7 +102,7 @@ ui vertexID parentIDs =
     renderStyleSelector :: ∀ a. Style -> String -> Array (HTML a (Query Unit))
     renderStyleSelector style name =
         [ H.button [ P.class_ (styleClass style)
-                   , E.onClick (E.input_ (EditStyle style))
+                   , E.onClick (E.input_ (ModifyVertex \(Vertex n c _) -> Vertex n c style))
                    ]
             [H.text name]
         ]
@@ -127,21 +125,12 @@ ui vertexID parentIDs =
                     then Just $ true <$ action (UpdateVertex vertex)
                     else Nothing
     eval (UpdateVertex vertex next) = next <$ State.put (Just vertex)
-    eval (EditNote note next) = do
+    eval (ModifyVertex func next) = do
         State.get >>= case _ of
             Nothing -> pure unit
-            Just (Vertex _ children style) -> do
-                let newVertex = (Vertex note children style)
-                bus <- lift $ mLiftVertexDSL $ vertexBus
-                lift $ mLiftAff $ Bus.write (Tuple vertexID newVertex) bus
-        pure next
-    eval (EditStyle style next) = do
-        State.get >>= case _ of
-            Nothing -> pure unit
-            Just (Vertex note children _) -> do
-                let newVertex = (Vertex note children style)
-                bus <- lift $ mLiftVertexDSL $ vertexBus
-                lift $ mLiftAff $ Bus.write (Tuple vertexID newVertex) bus
+            Just vertex -> lift do
+                bus <- mLiftVertexDSL vertexBus
+                mLiftAff $ Bus.write (vertexID /\ func vertex) bus
         pure next
     eval (AddNewVertex next) = do
         lift $ mLiftVertexDSL $ newVertex (vertexID : Nil)
