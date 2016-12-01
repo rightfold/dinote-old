@@ -81,7 +81,7 @@ handleCreateEdge
     -> {parentID :: VertexID, childID :: VertexID}
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
 handleCreateEdge db edge = do
-    withConnection db $ Vertex.DB.createEdge `flip` edge
+    withConnection db (Vertex.DB.createEdge `flip` edge)
     pure { status: {code: 200, message: "OK"}
          , headers: Map.empty :: Map CaseInsensitiveString String
          , body: pure unit
@@ -92,8 +92,8 @@ handleVertex
      . Pool
     -> VertexID
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
-handleVertex db vertexID = do
-    withConnection db $ Vertex.DB.readVertex `flip` vertexID
+handleVertex db vertexID =
+    withConnection db (Vertex.DB.readVertex `flip` vertexID)
     >>= case _ of
         Just vertex ->
             pure { status: {code: 200, message: "OK"}
