@@ -133,8 +133,8 @@ ui vertexID parentIDs =
                 >>= mLiftAff <<< Bus.write (vertexID /\ func vertex)
         pure next
     eval (AddNewVertex next) =
-        lift (mLiftVertexDSL $ newVertex (vertexID : Nil))
-        <#> (vertexChildren <>~ _) <<< (_ : Nil)
+        lift (mLiftVertexDSL $ newVertex (List.singleton vertexID))
+        <#> (vertexChildren <>~ _) <<< List.singleton
         >>= eval <<< ModifyVertex `flip` next
 
     initializer :: Maybe (Query Unit)
