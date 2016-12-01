@@ -7,9 +7,9 @@ import Control.Monad.Aff (forkAff)
 import Control.Monad.Aff.Bus as Bus
 import Control.Monad.Rec.Class (forever)
 import Network.HTTP.Affjax (AJAX)
+import Halogen.Aff.Util (awaitBody, runHalogenAff)
 import Halogen.Component as Halogen.Component
 import Halogen.Effects (HalogenEffects)
-import Halogen.Util (awaitBody, runHalogenAff)
 import Halogen.VirtualDOM.Driver (runUI)
 import NN.Client.DSL.Interpret (interpret)
 import NN.Client.Workspace.UI as Workspace.UI
@@ -25,4 +25,4 @@ main' = do
         Tuple vertexID vertex <- Bus.read vertexBus
         traceAnyA vertexID
         traceAnyA vertex
-    awaitBody >>= runUI (Halogen.Component.interpret (interpret vertexBus) Workspace.UI.ui) # void
+    awaitBody >>= runUI (Halogen.Component.hoist (interpret vertexBus) Workspace.UI.ui) # void

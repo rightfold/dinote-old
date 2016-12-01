@@ -123,7 +123,8 @@ ui vertexID parentIDs =
         subsequent = do
             bus <- lift $ mLiftVertexDSL $ vertexBus
             hoistM mLiftAff $ subscribe $ busEvents bus \(Tuple vertexID' vertex) ->
-                guard (vertexID' == vertexID) $> (true <$ action (UpdateVertex vertex))
+                guard (vertexID' == vertexID)
+                $> (Listening <$ action (UpdateVertex vertex))
     eval (UpdateVertex vertex next) = next <$ State.put (Just vertex)
     eval (ModifyVertex func next) = do
         State.get >>= case _ of
