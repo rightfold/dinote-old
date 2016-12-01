@@ -10,6 +10,7 @@ import Control.Monad.Aff.Bus as Bus
 import Control.Monad.Free (Free, liftF)
 import Control.Monad.State.Class as State
 import Control.Monad.Trans.Class (lift)
+import Control.MonadZero (guard)
 import Data.Functor.Coproduct (left, right)
 import Data.Lazy (defer)
 import Data.Lens ((.~))
@@ -121,21 +122,18 @@ ui vertexID parentIDs =
         immediate = State.put =<< lift (mLiftVertexDSL $ getVertex vertexID)
         subsequent = do
             bus <- lift $ mLiftVertexDSL $ vertexBus
-            hoistM mLiftAff $ subscribe $ busEvents bus $ \(Tuple vertexID' vertex) ->
-                if vertexID' == vertexID
-                    then Just $ true <$ action (UpdateVertex vertex)
-                    else Nothing
+            hoistM mLiftAff $ subscribe $ busEvents bus \(Tuple vertexID' vertex) ->
+                guard (vertexID' == vertexID) $> (true <$ action (UpdateVertex vertex))
     eval (UpdateVertex vertex next) = next <$ State.put (Just vertex)
     eval (ModifyVertex func next) = do
         State.get >>= case _ of
             Nothing -> pure unit
-            Just vertex -> lift do
-                bus <- mLiftVertexDSL vertexBus
-                mLiftAff $ Bus.write (vertexID /\ func vertex) bus
+            Just vertex -> lift $
+                mLiftVertexDSL vertexBus
+                >>= mLiftAff <<< Bus.write (vertexID /\ func vertex)
         pure next
-    eval (AddNewVertex next) = do
-        lift $ mLiftVertexDSL $ newVertex (vertexID : Nil)
-        pure next
+    eval (AddNewVertex next) =
+        next <$ lift (mLiftVertexDSL $ newVertex (vertexID : Nil))
 
     initializer :: Maybe (Query Unit)
     initializer = Just $ action Initialize

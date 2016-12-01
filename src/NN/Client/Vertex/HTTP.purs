@@ -12,9 +12,9 @@ import NN.Prelude
 import NN.Vertex (Vertex, VertexID(..))
 
 fetchVertex :: ∀ eff. VertexID -> Aff (ajax :: AJAX | eff) (Maybe Vertex)
-fetchVertex (VertexID vertexID) = do
-    {response} <- Affjax.get ("/api/v1/vertices/" <> vertexID)
-    pure $ Sexp.fromString response >>= Sexp.fromSexp
+fetchVertex (VertexID vertexID) =
+    Affjax.get ("/api/v1/vertices/" <> vertexID)
+    <#> (_.response >>> Sexp.fromString >=> Sexp.fromSexp)
 
 createVertex
     :: ∀ eff
@@ -29,6 +29,6 @@ createEdge
     :: ∀ eff
      . {parentID :: VertexID, childID :: VertexID}
     -> Aff (ajax :: AJAX | eff) Unit
-createEdge {parentID: VertexID parentID, childID: VertexID childID} = do
-    {response} <- Affjax.post ("/api/v1/vertices/" <> parentID <> "/children/" <> childID) unit
-    pure response
+createEdge {parentID: VertexID parentID, childID: VertexID childID} =
+    Affjax.post ("/api/v1/vertices/" <> parentID <> "/children/" <> childID) unit
+    <#> _.response

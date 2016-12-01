@@ -32,6 +32,7 @@
     "purescript-exceptions": "^2.0.0",
     "purescript-uuid": "^3.0.0",
     "purescript-node-fs": "^3.0.0",
-    "purescript-profunctor-lenses": "^2.2.0"
+    "purescript-profunctor-lenses": "^2.2.0",
+    "purescript-control": "^2.0.0"
   }
 }
