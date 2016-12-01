@@ -2,6 +2,7 @@ module NN.Vertex.Style
 ( Style(..)
 ) where
 
+import Data.Generic (class Generic, gShow)
 import NN.Prelude
 
 data Style = Normal | Dimmed | Grass | Ocean | Peachpuff | HotdogStand

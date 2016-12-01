@@ -2,9 +2,12 @@ module Halogen.Component.Bus
 ( busEvents
 ) where
 
+import Control.Monad.Aff (runAff)
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Bus (Bus)
 import Control.Monad.Aff.Bus as Bus
+import Control.Monad.Aff.Class (class MonadAff)
+import Control.Monad.Rec.Class (forever)
 import Halogen.Query.EventSource (EventSource, eventSource)
 import NN.Prelude
 

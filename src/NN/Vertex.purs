@@ -3,6 +3,7 @@ module NN.Vertex
 , Vertex(..)
 ) where
 
+import Data.Generic (class Generic, gShow)
 import Data.Sexp (class AsSexp, gFromSexp, gToSexp, class FromSexp, class ToSexp)
 import NN.Prelude
 import NN.Vertex.Style (Style)

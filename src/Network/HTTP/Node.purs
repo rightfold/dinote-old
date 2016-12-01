@@ -3,8 +3,9 @@ module Network.HTTP.Node
 ) where
 
 import Control.Coroutine (($$), consumer, runProcess)
-import Control.Monad.Aff (makeAff)
+import Control.Monad.Aff (makeAff, runAff)
 import Data.Map as Map
+import Data.String.CaseInsensitive (CaseInsensitiveString(..))
 import Data.StrMap as StrMap
 import Network.HTTP.Message (Request, Response)
 import Node.HTTP (HTTP)

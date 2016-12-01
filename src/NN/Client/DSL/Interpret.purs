@@ -6,6 +6,8 @@ module NN.Client.DSL.Interpret
 
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Bus (BusRW)
+import Control.Monad.Free (foldFree, Free)
+import Data.Functor.Coproduct (coproduct)
 import Network.HTTP.Affjax (AJAX)
 import NN.Client.DSL (NNDSL)
 import NN.Prelude

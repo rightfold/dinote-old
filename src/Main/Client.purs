@@ -3,7 +3,9 @@ module Main.Client
 , main'
 ) where
 
+import Control.Monad.Aff (forkAff)
 import Control.Monad.Aff.Bus as Bus
+import Control.Monad.Rec.Class (forever)
 import Network.HTTP.Affjax (AJAX)
 import Halogen.Component as Halogen.Component
 import Halogen.Effects (HalogenEffects)

@@ -3,8 +3,8 @@ module NN.Client.DSL
 , NNDSLF
 ) where
 
+import Control.Monad.Free (Free)
 import NN.Client.Vertex.DSL (VertexDSLF)
-import NN.Prelude
 
 type NNDSL = Free NNDSLF
 

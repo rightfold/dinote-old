@@ -6,7 +6,9 @@ module NN.Client.Workspace.UI
 ) where
 
 import Control.Monad.Aff.AVar (AVAR)
+import Control.Monad.Free (Free)
 import Control.Monad.State.Class as State
+import Data.Lazy (defer)
 import Data.List as List
 import Data.Map (Map)
 import Data.Map as Map

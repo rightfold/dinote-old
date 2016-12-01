@@ -3,11 +3,14 @@ module Main.Server
 ) where
 
 import Control.Coroutine (emit)
+import Control.Monad.Aff (launchAff)
+import Control.Monad.Eff.Unsafe (unsafePerformEff)
 import Data.Array as Array
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Sexp as Sexp
 import Data.String as String
+import Data.String.CaseInsensitive (CaseInsensitiveString(..))
 import Data.UUID (GENUUID)
 import Data.UUID as UUID
 import Database.PostgreSQL (Connection, execute, newPool, Pool, POSTGRESQL, query, withConnection)

@@ -7,7 +7,11 @@ module NN.Client.Vertex.UI
 
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Aff.Bus as Bus
+import Control.Monad.Free (Free, liftF)
 import Control.Monad.State.Class as State
+import Control.Monad.Trans.Class (lift)
+import Data.Functor.Coproduct (left, right)
+import Data.Lazy (defer)
 import Data.List as List
 import Data.Set (Set)
 import Data.Set as Set
@@ -150,7 +154,7 @@ ui vertexID parentIDs =
     finalizer = Nothing
 
     isCycle :: Boolean
-    isCycle = vertexID ∈ parentIDs
+    isCycle = Set.member vertexID parentIDs
 
 styleClass :: Style -> ClassName
 styleClass Normal = ClassName "-style-normal"
