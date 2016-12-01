@@ -5,15 +5,13 @@ module Main.Server
 import Control.Coroutine (emit)
 import Control.Monad.Aff (launchAff)
 import Control.Monad.Eff.Unsafe (unsafePerformEff)
-import Data.Array as Array
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Sexp as Sexp
 import Data.String as String
 import Data.String.CaseInsensitive (CaseInsensitiveString(..))
 import Data.UUID (GENUUID)
-import Data.UUID as UUID
-import Database.PostgreSQL (Connection, execute, newPool, Pool, POSTGRESQL, query, withConnection)
+import Database.PostgreSQL (newPool, Pool, POSTGRESQL, withConnection)
 import Network.HTTP.Message (Request, Response)
 import Network.HTTP.Node (nodeHandler)
 import Node.Buffer as Buffer
@@ -23,8 +21,8 @@ import Node.FS.Sync (readFile)
 import Node.HTTP (createServer, listen)
 import NN.Prelude
 import NN.Server.Setup (setupDB)
-import NN.Vertex (Vertex(..), VertexID(..))
-import NN.Vertex.Style (Style(..))
+import NN.Server.Vertex.DB as Vertex.DB
+import NN.Vertex (VertexID(..))
 
 main = launchAff do
     db <- newPool { user: "postgres"
@@ -70,76 +68,39 @@ handleCreateVertex
     :: ∀ eff
      . Pool
     -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) (Response (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff))
-handleCreateVertex db =
-    withConnection db \conn -> do
-        vertexIDStr <- liftEff $ show <$> UUID.genUUID
-        execute conn """
-            INSERT INTO vertices (id, note, style)
-            VALUES ($1, '', 'normal')
-        """ (vertexIDStr /\ unit)
-        let vertexID = VertexID vertexIDStr
-        pure { status: {code: 200, message: "OK"}
-             , headers: Map.empty :: Map CaseInsensitiveString String
-             , body: emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
-             }
+handleCreateVertex db = do
+    vertexID <- withConnection db Vertex.DB.createVertex
+    pure { status: {code: 200, message: "OK"}
+         , headers: Map.empty :: Map CaseInsensitiveString String
+         , body: emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
+         }
 
 handleCreateEdge
     :: ∀ eff
      . Pool
     -> {parentID :: VertexID, childID :: VertexID}
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
-handleCreateEdge db {parentID: VertexID parentID, childID: VertexID childID} =
-    withConnection db \conn -> do
-        execute conn """
-            INSERT INTO edges (parent_id, child_id, index)
-            SELECT $1, $2, coalesce(max(index) + 1, 0)
-            FROM edges
-            WHERE parent_id = $1
-        """ (parentID /\ childID /\ unit)
-        pure { status: {code: 200, message: "OK"}
-             , headers: Map.empty :: Map CaseInsensitiveString String
-             , body: pure unit
-             }
+handleCreateEdge db edge = do
+    withConnection db $ Vertex.DB.createEdge `flip` edge
+    pure { status: {code: 200, message: "OK"}
+         , headers: Map.empty :: Map CaseInsensitiveString String
+         , body: pure unit
+         }
 
 handleVertex
     :: ∀ eff
      . Pool
     -> VertexID
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
-handleVertex db (VertexID vertexID) =
-    withConnection db \conn -> do
-        result <- query conn """
-            SELECT
-                v.note,
-                CASE WHEN count(e.*) = 0 THEN
-                    ARRAY[] :: uuid[]
-                ELSE
-                    array_agg(e.child_id ORDER BY e.index ASC)
-                END,
-                v.style
-            FROM vertices AS v
-            LEFT JOIN edges AS e
-                ON e.parent_id = v.id
-            WHERE v.id = $1
-            GROUP BY v.id
-        """ (vertexID /\ unit)
-        case result of
-            [note /\ children /\ style /\ (_ :: Unit)] ->
-                pure { status: {code: 200, message: "OK"}
-                     , headers: Map.empty :: Map CaseInsensitiveString String
-                     , body:
-                        let s = case style of
-                                    "normal              " -> Normal
-                                    "dimmed              " -> Dimmed
-                                    "grass               " -> Grass
-                                    "ocean               " -> Ocean
-                                    "peachpuff           " -> Peachpuff
-                                    "hotdog_stand        " -> HotdogStand
-                                    _ -> Normal
-                            v = Vertex note (Array.toUnfoldable $ map VertexID children) s
-                        in emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp v) UTF8
-                     }
-            _ -> pure notFound
+handleVertex db vertexID = do
+    withConnection db $ Vertex.DB.readVertex `flip` vertexID
+    >>= case _ of
+        Just vertex ->
+            pure { status: {code: 200, message: "OK"}
+                 , headers: Map.empty :: Map CaseInsensitiveString String
+                 , body: emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp vertex) UTF8
+                 }
+        Nothing -> pure notFound
 
 notFound :: ∀ eff. Response eff
 notFound =

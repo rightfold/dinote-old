@@ -19,6 +19,7 @@ module Database.PostgreSQL
 
 import Control.Monad.Except (runExcept)
 import Data.Foreign (Foreign, readArray, readString, toForeign)
+import Data.List as List
 import Data.Tuple.Nested (tuple1, tuple2, tuple3, tuple4, tuple5)
 import NN.Prelude
 import Partial.Unsafe (unsafePartial)
@@ -101,6 +102,9 @@ instance fromSQLValueString :: FromSQLValue String where
 
 instance fromSQLValueArray :: (FromSQLValue a) => FromSQLValue (Array a) where
     fromSQLValue = traverse fromSQLValue <=< fromRight <<< runExcept <<< readArray
+
+instance fromSQLValueList :: (FromSQLValue a) => FromSQLValue (List a) where
+    fromSQLValue = map List.fromFoldable <<< traverse fromSQLValue <=< fromRight <<< runExcept <<< readArray
 
 foreign import newPool
     :: ∀ eff
