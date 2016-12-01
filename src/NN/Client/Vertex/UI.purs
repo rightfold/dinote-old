@@ -13,7 +13,7 @@ import Control.Monad.Trans.Class (lift)
 import Control.MonadZero (guard)
 import Data.Functor.Coproduct (left, right)
 import Data.Lazy (defer)
-import Data.Lens ((.~))
+import Data.Lens ((.~), (<>~))
 import Data.List as List
 import Data.Set (Set)
 import Data.Set as Set
@@ -23,7 +23,7 @@ import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
 import NN.Client.Vertex.DSL (getVertex, newVertex, vertexBus, VertexDSL)
 import NN.Prelude.Halogen
-import NN.Vertex (Vertex(..), VertexID, vertexNote, vertexStyle)
+import NN.Vertex (Vertex(..), vertexChildren, VertexID, vertexNote, vertexStyle)
 import NN.Vertex.Style (Style(..))
 
 type State = Maybe Vertex
@@ -133,7 +133,9 @@ ui vertexID parentIDs =
                 >>= mLiftAff <<< Bus.write (vertexID /\ func vertex)
         pure next
     eval (AddNewVertex next) =
-        next <$ lift (mLiftVertexDSL $ newVertex (vertexID : Nil))
+        lift (mLiftVertexDSL $ newVertex (vertexID : Nil))
+        <#> (vertexChildren <>~ _) <<< (_ : Nil)
+        >>= eval <<< ModifyVertex `flip` next
 
     initializer :: Maybe (Query Unit)
     initializer = Just $ action Initialize
