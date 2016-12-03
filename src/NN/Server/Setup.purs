@@ -24,12 +24,44 @@ setupDB conn = do
     """ unit
 
     execute conn """
+        CREATE TABLE IF NOT EXISTS files (
+            id              uuid        NOT NULL,
+            name            text        NOT NULL,
+            author_id       uuid        NOT NULL,
+            root_id         uuid        NOT NULL,
+            PRIMARY KEY (id),
+            FOREIGN KEY (author_id)
+                REFERENCES users(id)
+                ON DELETE CASCADE
+        );
+    """ unit
+
+    execute conn """
+        CREATE INDEX IF NOT EXISTS files__name
+            ON files
+            (name)
+    """ unit
+
+    execute conn """
         CREATE TABLE IF NOT EXISTS vertices (
             id          uuid        NOT NULL,
             note        text        NOT NULL,
             style       char(20)    NOT NULL,
-            PRIMARY KEY (id)
+            file_id     uuid        NOT NULL,
+            PRIMARY KEY (id),
+            FOREIGN KEY (file_id)
+                REFERENCES files(id)
+                ON DELETE CASCADE
         )
+    """ unit
+
+    execute conn """
+        ALTER TABLE files
+        DROP CONSTRAINT IF EXISTS files_root_id_fkey,
+        ADD CONSTRAINT files_root_id_fkey
+            FOREIGN KEY (root_id)
+            REFERENCES vertices(id)
+            ON DELETE CASCADE
     """ unit
 
     execute conn """

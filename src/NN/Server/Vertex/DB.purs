@@ -7,6 +7,7 @@ module NN.Server.Vertex.DB
 import Database.PostgreSQL (Connection, execute, POSTGRESQL, query)
 import Data.UUID (GENUUID)
 import Data.UUID as UUID
+import NN.File (FileID(..))
 import NN.Prelude
 import NN.Vertex (Vertex(..), VertexID(..))
 import NN.Vertex.Style (Style(..))
@@ -48,13 +49,14 @@ readVertex conn (VertexID vertexID) = do
 createVertex
     :: ∀ eff
      . Connection
+    -> FileID
     -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) VertexID
-createVertex conn = do
+createVertex conn (FileID fileID) = do
     vertexIDStr <- liftEff $ show <$> UUID.genUUID
     execute conn """
-        INSERT INTO vertices (id, note, style)
-        VALUES ($1, '', 'normal')
-    """ (vertexIDStr /\ unit)
+        INSERT INTO vertices (id, note, style, file_id)
+        VALUES ($1, '', 'normal', $2)
+    """ (vertexIDStr /\ fileID /\ unit)
     pure $ VertexID vertexIDStr
 
 createEdge

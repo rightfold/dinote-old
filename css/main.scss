@@ -59,7 +59,7 @@ textarea, button {
         flex-basis: $sidebar-width;
         flex-shrink: 0;
 
-        & > ul > li > .-user, & > ul > li > .-files > li {
+        & > ul > li {
             $border-width: 2px;
 
             line-height: $unitgr;
@@ -74,21 +74,13 @@ textarea, button {
             padding-left: $unitgr / 2 - $border-width;
             padding-right: $unitgr / 2 - $border-width;
             margin-bottom: $unitgr / 2;
-        }
 
-        & > ul > li > .-files {
-            border-left: dotted 1px black;
+            cursor: pointer;
 
-            & > li {
-                cursor: pointer;
+            @include button;
 
-                margin-left: $unitgr / 2;
-
-                @include button;
-
-                &.-active {
-                    background: #eeeeee;
-                }
+            &.-active {
+                background: #eeeeee;
             }
         }
     }

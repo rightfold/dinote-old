@@ -8,6 +8,7 @@ import Control.Monad.Eff.Exception (throw)
 import Data.Sexp as Sexp
 import Network.HTTP.Affjax (AJAX)
 import Network.HTTP.Affjax as Affjax
+import NN.File (FileID(..))
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID(..))
 
@@ -18,9 +19,10 @@ fetchVertex (VertexID vertexID) =
 
 createVertex
     :: ∀ eff
-     . Aff (ajax :: AJAX | eff) VertexID
-createVertex = do
-    {response} <- Affjax.post ("/api/v1/vertices") unit
+     . FileID
+    -> Aff (ajax :: AJAX | eff) VertexID
+createVertex (FileID fileID) = do
+    {response} <- Affjax.post ("/api/v1/files/" <> fileID <> "/vertices") unit
     case Sexp.fromString response >>= Sexp.fromSexp of
         Just vertexID -> pure vertexID
         Nothing -> liftEff' $ throw "could not create vertex"

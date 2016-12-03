@@ -22,6 +22,7 @@ import Halogen.HTML as H
 import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
 import NN.Client.Vertex.DSL (getVertex, newVertex, vertexBus, VertexDSL)
+import NN.File (FileID)
 import NN.Prelude.Halogen
 import NN.Vertex (Vertex(..), vertexChildren, VertexID, vertexNote, vertexStyle)
 import NN.Vertex.Style (Style(..))
@@ -52,8 +53,8 @@ mLiftAff = liftF <<< left
 mLiftVertexDSL :: ∀ eff. VertexDSL ~> Monad eff
 mLiftVertexDSL = liftF <<< right
 
-ui :: ∀ eff. VertexID -> Set VertexID -> Component HTML Query Output (Monad eff)
-ui vertexID parentIDs =
+ui :: ∀ eff. FileID -> VertexID -> Set VertexID -> Component HTML Query Output (Monad eff)
+ui fileID vertexID parentIDs =
     lifecycleParentComponent {initialState, render, eval, initializer, finalizer}
     where
     initialState :: State
@@ -111,7 +112,7 @@ ui vertexID parentIDs =
 
     renderChild :: Slot -> VertexID -> Array (ParentHTML Query Query Slot (Monad eff))
     renderChild slot childID =
-        let childComponent = defer \_ -> ui childID (Set.insert vertexID parentIDs)
+        let childComponent = defer \_ -> ui fileID childID (Set.insert vertexID parentIDs)
         in [H.slot slot childComponent absurd]
 
     eval :: Query ~> ParentDSL State Query Query Slot Output (Monad eff)
@@ -134,7 +135,7 @@ ui vertexID parentIDs =
                 >>= mLiftAff <<< Bus.write (vertexID /\ func vertex)
         pure next
     eval (AddNewVertex next) =
-        lift (mLiftVertexDSL $ newVertex (List.singleton vertexID))
+        lift (mLiftVertexDSL $ newVertex fileID (List.singleton vertexID))
         <#> (vertexChildren <>~ _) <<< List.singleton
         >>= eval <<< ModifyVertex `flip` next
 

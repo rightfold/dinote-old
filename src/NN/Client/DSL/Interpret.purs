@@ -39,7 +39,7 @@ runVertexDSL vertexBus = foldFree go
     go :: VertexDSLF ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
     go (GetVertex vertexID a) = a <$> fetchVertex vertexID
     go (VertexBus a) = pure $ a vertexBus
-    go (NewVertex parentIDs a) = do
-        childID <- createVertex
+    go (NewVertex fileID parentIDs a) = do
+        childID <- createVertex fileID
         for parentIDs \parentID -> createEdge {parentID, childID}
         pure $ a childID

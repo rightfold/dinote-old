@@ -19,6 +19,7 @@ import Node.Encoding (Encoding(UTF8))
 import Node.FS (FS)
 import Node.FS.Sync (readFile)
 import Node.HTTP (createServer, listen)
+import NN.File (FileID(..))
 import NN.Prelude
 import NN.Server.Setup (setupDB)
 import NN.Server.Vertex.DB as Vertex.DB
@@ -50,7 +51,7 @@ handle db req =
         ["", ""] -> static "text/html" "index.html"
         ["", "output", "nn.js"] -> static "application/javascript" "output/nn.js"
         ["", "output", "nn.css"] -> static "text/css" "output/nn.css"
-        ["", "api", "v1", "vertices"] -> handleCreateVertex db
+        ["", "api", "v1", "files", fileID, "vertices"] -> handleCreateVertex db (FileID fileID)
         ["", "api", "v1", "vertices", vertexID] -> handleVertex db (VertexID vertexID)
         ["", "api", "v1", "vertices", parentID, "children", childID] ->
             handleCreateEdge db {parentID: VertexID parentID, childID: VertexID childID}
@@ -67,9 +68,10 @@ static mime path = do
 handleCreateVertex
     :: ∀ eff
      . Pool
+    -> FileID
     -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) (Response (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff))
-handleCreateVertex db = do
-    vertexID <- withConnection db Vertex.DB.createVertex
+handleCreateVertex db fileID = do
+    vertexID <- withConnection db $ Vertex.DB.createVertex `flip` fileID
     pure { status: {code: 200, message: "OK"}
          , headers: Map.empty :: Map CaseInsensitiveString String
          , body: emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
