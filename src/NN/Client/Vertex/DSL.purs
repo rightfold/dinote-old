@@ -3,7 +3,8 @@ module NN.Client.Vertex.DSL
 , VertexDSLF(..)
 , getVertex
 , vertexBus
-, newVertex
+, createVertex
+, createEdge
 ) where
 
 import Control.Monad.Aff.Bus (BusRW)
@@ -17,7 +18,8 @@ type VertexDSL = Free VertexDSLF
 data VertexDSLF a
     = GetVertex VertexID (Maybe Vertex -> a)
     | VertexBus (BusRW (Tuple VertexID Vertex) -> a)
-    | NewVertex FileID (List VertexID) (VertexID -> a)
+    | CreateVertex FileID (VertexID -> a)
+    | CreateEdge {parentID :: VertexID, childID :: VertexID} a
 
 getVertex :: VertexID -> VertexDSL (Maybe Vertex)
 getVertex vertexID = liftF $ GetVertex vertexID id
@@ -25,5 +27,8 @@ getVertex vertexID = liftF $ GetVertex vertexID id
 vertexBus :: VertexDSL (BusRW (Tuple VertexID Vertex))
 vertexBus = liftF $ VertexBus id
 
-newVertex :: FileID -> List VertexID -> VertexDSL VertexID
-newVertex fileID parents = liftF $ NewVertex fileID parents id
+createVertex :: FileID -> VertexDSL VertexID
+createVertex fileID = liftF $ CreateVertex fileID id
+
+createEdge :: {parentID :: VertexID, childID :: VertexID} -> VertexDSL Unit
+createEdge edge = liftF $ CreateEdge edge unit

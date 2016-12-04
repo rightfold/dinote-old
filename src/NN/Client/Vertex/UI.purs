@@ -21,7 +21,7 @@ import Halogen.Component.Bus (busEvents)
 import Halogen.HTML as H
 import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
-import NN.Client.Vertex.DSL (getVertex, newVertex, vertexBus, VertexDSL)
+import NN.Client.Vertex.DSL (createEdge, createVertex, getVertex, vertexBus, VertexDSL)
 import NN.File (FileID)
 import NN.Prelude.Halogen
 import NN.Vertex (Vertex(..), vertexChildren, VertexID, vertexNote, vertexStyle)
@@ -135,7 +135,10 @@ ui fileID vertexID parentIDs =
                 >>= mLiftAff <<< Bus.write (vertexID /\ func vertex)
         pure next
     eval (AddNewVertex next) =
-        lift (mLiftVertexDSL $ newVertex fileID (List.singleton vertexID))
+        lift (mLiftVertexDSL do
+            childID <- createVertex fileID
+            createEdge {parentID: vertexID, childID}
+            pure childID)
         <#> (vertexChildren <>~ _) <<< List.singleton
         >>= eval <<< ModifyVertex `flip` next
 

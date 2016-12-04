@@ -1,5 +1,5 @@
 module NN.Client.Vertex.HTTP
-( fetchVertex
+( getVertex
 , createVertex
 , createEdge
 ) where
@@ -12,8 +12,8 @@ import NN.File (FileID(..))
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID(..))
 
-fetchVertex :: ∀ eff. VertexID -> Aff (ajax :: AJAX | eff) (Maybe Vertex)
-fetchVertex (VertexID vertexID) =
+getVertex :: ∀ eff. VertexID -> Aff (ajax :: AJAX | eff) (Maybe Vertex)
+getVertex (VertexID vertexID) =
     Affjax.get ("/api/v1/vertices/" <> vertexID)
     <#> (_.response >>> Sexp.fromString >=> Sexp.fromSexp)
 

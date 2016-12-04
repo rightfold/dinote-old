@@ -12,7 +12,7 @@ import Network.HTTP.Affjax (AJAX)
 import NN.Client.DSL (NNDSL)
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID)
-import NN.Client.Vertex.HTTP (createEdge, createVertex, fetchVertex)
+import NN.Client.Vertex.HTTP (createEdge, createVertex, getVertex)
 import NN.Client.Vertex.DSL (VertexDSL, VertexDSLF(..))
 
 interpret
@@ -37,9 +37,7 @@ runVertexDSL
 runVertexDSL vertexBus = foldFree go
     where
     go :: VertexDSLF ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
-    go (GetVertex vertexID a) = a <$> fetchVertex vertexID
+    go (GetVertex vertexID a) = a <$> getVertex vertexID
     go (VertexBus a) = pure $ a vertexBus
-    go (NewVertex fileID parentIDs a) = do
-        childID <- createVertex fileID
-        for parentIDs \parentID -> createEdge {parentID, childID}
-        pure $ a childID
+    go (CreateVertex fileID a) = a <$> createVertex fileID
+    go (CreateEdge edge a) = a <$ createEdge edge
