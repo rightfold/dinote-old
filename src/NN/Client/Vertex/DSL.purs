@@ -16,13 +16,13 @@ import NN.Vertex (Vertex, VertexID)
 type VertexDSL = Free VertexDSLF
 
 data VertexDSLF a
-    = GetVertex VertexID (Maybe Vertex -> a)
+    = GetVertex FileID VertexID (Maybe Vertex -> a)
     | VertexBus (BusRW (Tuple VertexID Vertex) -> a)
     | CreateVertex FileID (VertexID -> a)
-    | CreateEdge {parentID :: VertexID, childID :: VertexID} a
+    | CreateEdge FileID {parentID :: VertexID, childID :: VertexID} a
 
-getVertex :: VertexID -> VertexDSL (Maybe Vertex)
-getVertex vertexID = liftF $ GetVertex vertexID id
+getVertex :: FileID -> VertexID -> VertexDSL (Maybe Vertex)
+getVertex fileID vertexID = liftF $ GetVertex fileID vertexID id
 
 vertexBus :: VertexDSL (BusRW (Tuple VertexID Vertex))
 vertexBus = liftF $ VertexBus id
@@ -30,5 +30,5 @@ vertexBus = liftF $ VertexBus id
 createVertex :: FileID -> VertexDSL VertexID
 createVertex fileID = liftF $ CreateVertex fileID id
 
-createEdge :: {parentID :: VertexID, childID :: VertexID} -> VertexDSL Unit
-createEdge edge = liftF $ CreateEdge edge unit
+createEdge :: FileID -> {parentID :: VertexID, childID :: VertexID} -> VertexDSL Unit
+createEdge fileID edge = liftF $ CreateEdge fileID edge unit

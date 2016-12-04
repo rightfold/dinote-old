@@ -120,7 +120,7 @@ ui fileID vertexID parentIDs =
         | isCycle = pure next
         | otherwise = immediate *> subsequent $> next
         where
-        immediate = State.put =<< lift (mLiftVertexDSL $ getVertex vertexID)
+        immediate = State.put =<< lift (mLiftVertexDSL $ getVertex fileID vertexID)
         subsequent = do
             bus <- lift $ mLiftVertexDSL $ vertexBus
             hoistM mLiftAff $ subscribe $ busEvents bus \(Tuple vertexID' vertex) ->
@@ -137,7 +137,7 @@ ui fileID vertexID parentIDs =
     eval (AddNewVertex next) =
         lift (mLiftVertexDSL do
             childID <- createVertex fileID
-            createEdge {parentID: vertexID, childID}
+            createEdge fileID {parentID: vertexID, childID}
             pure childID)
         <#> (vertexChildren <>~ _) <<< List.singleton
         >>= eval <<< ModifyVertex `flip` next

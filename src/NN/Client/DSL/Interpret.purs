@@ -37,7 +37,7 @@ runVertexDSL
 runVertexDSL vertexBus = foldFree go
     where
     go :: VertexDSLF ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
-    go (GetVertex vertexID a) = a <$> getVertex vertexID
+    go (GetVertex fileID vertexID a) = a <$> getVertex fileID vertexID
     go (VertexBus a) = pure $ a vertexBus
     go (CreateVertex fileID a) = a <$> createVertex fileID
-    go (CreateEdge edge a) = a <$ createEdge edge
+    go (CreateEdge fileID edge a) = a <$ createEdge fileID edge

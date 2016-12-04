@@ -48,12 +48,12 @@ handle
     -> Aff (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) (Response (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff))
 handle db req =
     case unwrap req.method, String.split (String.Pattern "/") req.path of
-        "GET", ["", ""] -> static "text/html" "index.html"
-        "GET", ["", "output", "nn.js"] -> static "application/javascript" "output/nn.js"
-        "GET", ["", "output", "nn.css"] -> static "text/css" "output/nn.css"
-        "POST", ["", "api", "v1", "files", fileID, "vertices"] -> handleCreateVertex db (FileID fileID)
-        "GET", ["", "api", "v1", "vertices", vertexID] -> handleVertex db (VertexID vertexID)
-        "POST", ["", "api", "v1", "vertices", parentID, "children", childID] ->
+        "GET",  ["", ""]                                                        -> static "text/html" "index.html"
+        "GET",  ["", "output", "nn.js"]                                         -> static "application/javascript" "output/nn.js"
+        "GET",  ["", "output", "nn.css"]                                        -> static "text/css" "output/nn.css"
+        "POST", ["", "api", "v1", "files", fileID, "vertices"]                  -> handleCreateVertex db (FileID fileID)
+        "GET",  ["", "api", "v1", "files", fileID, "vertices", vertexID]        -> handleVertex db (VertexID vertexID)
+        "POST", ["", "api", "v1", "files", fileID, "edges", parentID, childID]  ->
             handleCreateEdge db {parentID: VertexID parentID, childID: VertexID childID}
         _, _ -> pure notFound
 

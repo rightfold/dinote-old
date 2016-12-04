@@ -12,9 +12,9 @@ import NN.File (FileID(..))
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID(..))
 
-getVertex :: ∀ eff. VertexID -> Aff (ajax :: AJAX | eff) (Maybe Vertex)
-getVertex (VertexID vertexID) =
-    Affjax.get ("/api/v1/vertices/" <> vertexID)
+getVertex :: ∀ eff. FileID -> VertexID -> Aff (ajax :: AJAX | eff) (Maybe Vertex)
+getVertex (FileID fileID) (VertexID vertexID) =
+    Affjax.get ("/api/v1/files/" <> fileID <> "/vertices/" <> vertexID)
     <#> (_.response >>> Sexp.fromString >=> Sexp.fromSexp)
 
 createVertex
@@ -29,8 +29,9 @@ createVertex (FileID fileID) = do
 
 createEdge
     :: ∀ eff
-     . {parentID :: VertexID, childID :: VertexID}
+     . FileID
+    -> {parentID :: VertexID, childID :: VertexID}
     -> Aff (ajax :: AJAX | eff) Unit
-createEdge {parentID: VertexID parentID, childID: VertexID childID} =
-    Affjax.post ("/api/v1/vertices/" <> parentID <> "/children/" <> childID) unit
+createEdge (FileID fileID) {parentID: VertexID parentID, childID: VertexID childID} =
+    Affjax.post ("/api/v1/files/" <> fileID <> "/edges/" <> parentID <> "/" <> childID) unit
     <#> _.response
