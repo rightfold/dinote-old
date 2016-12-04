@@ -7,6 +7,7 @@ module NN.Prelude
 , module Data.List
 , module Data.Maybe
 , module Data.Monoid
+, module Data.Newtype
 , module Data.Traversable
 , module Data.Tuple
 , module Data.Tuple.Nested
@@ -26,6 +27,7 @@ import Data.Functor.Coproduct (Coproduct)
 import Data.List ((:), List(Nil))
 import Data.Maybe (fromJust, fromMaybe, Maybe(..), maybe)
 import Data.Monoid (mempty, class Monoid)
+import Data.Newtype (unwrap)
 import Data.Traversable (for, for_, traverse)
 import Data.Tuple (Tuple(..))
 import Data.Tuple.Nested ((/\))

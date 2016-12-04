@@ -47,15 +47,15 @@ handle
     -> Request (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff)
     -> Aff (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) (Response (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff))
 handle db req =
-    case String.split (String.Pattern "/") req.path of
-        ["", ""] -> static "text/html" "index.html"
-        ["", "output", "nn.js"] -> static "application/javascript" "output/nn.js"
-        ["", "output", "nn.css"] -> static "text/css" "output/nn.css"
-        ["", "api", "v1", "files", fileID, "vertices"] -> handleCreateVertex db (FileID fileID)
-        ["", "api", "v1", "vertices", vertexID] -> handleVertex db (VertexID vertexID)
-        ["", "api", "v1", "vertices", parentID, "children", childID] ->
+    case unwrap req.method, String.split (String.Pattern "/") req.path of
+        "GET", ["", ""] -> static "text/html" "index.html"
+        "GET", ["", "output", "nn.js"] -> static "application/javascript" "output/nn.js"
+        "GET", ["", "output", "nn.css"] -> static "text/css" "output/nn.css"
+        "POST", ["", "api", "v1", "files", fileID, "vertices"] -> handleCreateVertex db (FileID fileID)
+        "GET", ["", "api", "v1", "vertices", vertexID] -> handleVertex db (VertexID vertexID)
+        "POST", ["", "api", "v1", "vertices", parentID, "children", childID] ->
             handleCreateEdge db {parentID: VertexID parentID, childID: VertexID childID}
-        _ -> pure notFound
+        _, _ -> pure notFound
 
 static :: ∀ eff. String -> String -> Aff (fs :: FS | eff) (Response (fs :: FS | eff))
 static mime path = do
