@@ -4,7 +4,7 @@ module Main.Server
 
 import Control.Coroutine (emit)
 import Control.Monad.Aff (launchAff)
-import Control.Monad.Eff.Unsafe (unsafePerformEff)
+import Data.ByteString as ByteString
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Sexp as Sexp
@@ -14,7 +14,6 @@ import Data.UUID (GENUUID)
 import Database.PostgreSQL (newPool, Pool, POSTGRESQL, withConnection)
 import Network.HTTP.Message (Request, Response)
 import Network.HTTP.Node (nodeHandler)
-import Node.Buffer as Buffer
 import Node.Encoding (Encoding(UTF8))
 import Node.FS (FS)
 import Node.FS.Sync (readFile)
@@ -59,10 +58,10 @@ handle db req =
 
 static :: ∀ eff. String -> String -> Aff (fs :: FS | eff) (Response (fs :: FS | eff))
 static mime path = do
-    contents <- liftEff' $ readFile path
+    contents <- liftEff' $ ByteString.unsafeFreeze <$> readFile path
     pure { status: {code: 200, message: "OK"}
          , headers: Map.singleton (CaseInsensitiveString "content-type") mime
-         , body: emit contents
+         , body: emit $ contents
          }
 
 handleCreateVertex
@@ -74,7 +73,7 @@ handleCreateVertex db fileID = do
     vertexID <- withConnection db $ Vertex.DB.createVertex `flip` fileID
     pure { status: {code: 200, message: "OK"}
          , headers: Map.empty :: Map CaseInsensitiveString String
-         , body: emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
+         , body: emit $ ByteString.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
          }
 
 handleCreateEdge
@@ -100,7 +99,7 @@ handleVertex db vertexID =
         Just vertex ->
             pure { status: {code: 200, message: "OK"}
                  , headers: Map.empty :: Map CaseInsensitiveString String
-                 , body: emit $ unsafePerformEff $ Buffer.fromString (Sexp.toString $ Sexp.toSexp vertex) UTF8
+                 , body: emit $ ByteString.fromString (Sexp.toString $ Sexp.toSexp vertex) UTF8
                  }
         Nothing -> pure notFound
 

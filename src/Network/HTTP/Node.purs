@@ -4,6 +4,7 @@ module Network.HTTP.Node
 
 import Control.Coroutine (($$), consumer, runProcess)
 import Control.Monad.Aff (makeAff, runAff)
+import Data.ByteString as ByteString
 import Data.Map as Map
 import Data.String.CaseInsensitive (CaseInsensitiveString(..))
 import Data.StrMap as StrMap
@@ -26,7 +27,8 @@ nodeHandler h nReq nRes =
             liftEff $ N.setHeader nRes k v
         let nResBody = N.responseAsStream nRes
         runProcess $ res.body $$ consumer \bodyPart -> do
-            makeAff \_ ok -> void $ Stream.write nResBody bodyPart (ok unit)
+            let bodyPart' = ByteString.unsafeThaw bodyPart
+            makeAff \_ ok -> void $ Stream.write nResBody bodyPart' (ok unit)
             pure Nothing
         makeAff \_ ok -> Stream.end nResBody (ok unit)
     where

@@ -5,20 +5,20 @@ module Network.HTTP.Message
 
 import Control.Monad.Aff (Aff)
 import Control.Coroutine (Producer)
+import Data.ByteString (ByteString)
 import Data.Map (Map)
 import Data.String.CaseInsensitive (CaseInsensitiveString)
-import Node.Buffer (Buffer)
 import Prelude
 
 type Request eff =
     { method :: CaseInsensitiveString
     , path :: String
     , headers :: Map CaseInsensitiveString String
-    , body :: Producer Buffer (Aff eff) Unit
+    , body :: Producer ByteString (Aff eff) Unit
     }
 
 type Response eff =
     { status :: {code :: Int, message :: String}
     , headers :: Map CaseInsensitiveString String
-    , body :: Producer Buffer (Aff eff) Unit
+    , body :: Producer ByteString (Aff eff) Unit
     }
