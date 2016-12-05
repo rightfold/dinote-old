@@ -3,7 +3,7 @@ BEGIN;
 DELETE FROM users;
 
 INSERT INTO users (id, name, email_address, password_hash)
-VALUES ('80b2475a-c32e-47da-b154-faaf20c44a3f', 'John', 'john@example.com', '');
+VALUES ('80b2475a-c32e-47da-b154-faaf20c44a3f', 'John', 'john@example.com', crypt('lol123', gen_salt('bf')));
 
 WITH _ AS (
     INSERT INTO files (id, name, author_id, root_id)

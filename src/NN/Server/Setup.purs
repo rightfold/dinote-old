@@ -16,7 +16,7 @@ setupDB conn = do
             id              uuid        NOT NULL,
             name            text        NOT NULL,
             email_address   char(254)   NOT NULL,
-            password_hash   bytea       NOT NULL,
+            password_hash   text        NOT NULL,
             PRIMARY KEY (id)
         )
     """ unit
