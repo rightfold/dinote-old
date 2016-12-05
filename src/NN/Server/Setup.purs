@@ -8,6 +8,10 @@ import NN.Prelude
 setupDB :: ∀ eff. Connection -> Aff (postgreSQL :: POSTGRESQL | eff) Unit
 setupDB conn = do
     execute conn """
+        CREATE EXTENSION IF NOT EXISTS pgcrypto
+    """ unit
+
+    execute conn """
         CREATE TABLE IF NOT EXISTS users (
             id              uuid        NOT NULL,
             name            text        NOT NULL,
@@ -21,6 +25,24 @@ setupDB conn = do
         CREATE UNIQUE INDEX IF NOT EXISTS users__email_address
             ON users
             (lower(email_address))
+    """ unit
+
+    execute conn """
+        CREATE TABLE IF NOT EXISTS sessions (
+            id              uuid        NOT NULL,
+            user_id         uuid        NOT NULL,
+            description     text        NOT NULL,
+            PRIMARY KEY (id),
+            FOREIGN KEY (user_id)
+                REFERENCES users(id)
+                ON DELETE CASCADE
+        );
+    """ unit
+
+    execute conn """
+        CREATE INDEX IF NOT EXISTS sessions__user_id
+            ON sessions
+            (user_id)
     """ unit
 
     execute conn """
