@@ -34,6 +34,7 @@
     "purescript-profunctor-lenses": "^2.2.0",
     "purescript-control": "^2.0.0",
     "purescript-newtype": "^1.1.0",
-    "purescript-bytestrings": "^0.0.2"
+    "purescript-bytestrings": "^0.0.2",
+    "purescript-node-process": "^3.0.0"
   }
 }

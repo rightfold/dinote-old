@@ -11,12 +11,14 @@ import Data.String as String
 import Data.String.CaseInsensitive (CaseInsensitiveString(..))
 import Data.UUID (GENUUID)
 import Database.PostgreSQL (newPool, Pool, POSTGRESQL, withConnection)
+import Database.Stormpath as Stormpath
 import Network.HTTP.Message (Request, Response)
 import Network.HTTP.Node (nodeHandler)
 import Node.Encoding (Encoding(UTF8))
 import Node.FS (FS)
 import Node.FS.Sync (readFile)
 import Node.HTTP (createServer, listen)
+import Node.Process (exit, lookupEnv)
 import NN.File (FileID(..))
 import NN.Prelude
 import NN.Server.Setup (setupDB)
@@ -24,6 +26,18 @@ import NN.Server.Vertex.DB as Vertex.DB
 import NN.Vertex (VertexID(..))
 
 main = launchAff do
+    stormPathApp <- do
+        apiKeyIDM     <- liftEff $ lookupEnv "NN_STORMPATH_API_KEY"
+        apiKeySecretM <- liftEff $ lookupEnv "NN_STORMPATH_API_SECRET"
+        appHrefM      <- liftEff $ lookupEnv "NN_STORMPATH_APPLICATION_HREF"
+        case apiKeyIDM, apiKeySecretM, appHrefM of
+            Just apiKeyID, Just apiKeySecret, Just appHref -> do
+                Stormpath.newAPIKey apiKeyID apiKeySecret
+                # Stormpath.newClient
+                >>= Stormpath.getApplication `flip` appHref
+            _, _, _-> liftEff $ exit 1
+    traceAnyA stormPathApp
+
     db <- newPool { user: "postgres"
                   , password: "lol123"
                   , host: "localhost"

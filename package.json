@@ -2,6 +2,7 @@
   "name": "nodenote",
   "dependencies": {
     "pg": "^6.1.0",
+    "stormpath": "^0.19.0",
     "uuid": "^3.0.0",
     "uuid-validate": "0.0.2",
     "virtual-dom": "^2.1.1"
