@@ -12,30 +12,11 @@ setupDB conn = do
     """ unit
 
     execute conn """
-        CREATE TABLE IF NOT EXISTS users (
-            id              uuid        NOT NULL,
-            name            text        NOT NULL,
-            email_address   char(254)   NOT NULL,
-            password_hash   text        NOT NULL,
-            PRIMARY KEY (id)
-        )
-    """ unit
-
-    execute conn """
-        CREATE UNIQUE INDEX IF NOT EXISTS users__email_address
-            ON users
-            (lower(email_address))
-    """ unit
-
-    execute conn """
         CREATE TABLE IF NOT EXISTS sessions (
             id              uuid        NOT NULL,
-            user_id         uuid        NOT NULL,
+            user_id         text        NOT NULL,
             description     text        NOT NULL,
-            PRIMARY KEY (id),
-            FOREIGN KEY (user_id)
-                REFERENCES users(id)
-                ON DELETE CASCADE
+            PRIMARY KEY (id)
         );
     """ unit
 
@@ -49,13 +30,16 @@ setupDB conn = do
         CREATE TABLE IF NOT EXISTS files (
             id              uuid        NOT NULL,
             name            text        NOT NULL,
-            author_id       uuid        NOT NULL,
+            author_id       text        NOT NULL,
             root_id         uuid        NOT NULL,
-            PRIMARY KEY (id),
-            FOREIGN KEY (author_id)
-                REFERENCES users(id)
-                ON DELETE CASCADE
+            PRIMARY KEY (id)
         );
+    """ unit
+
+    execute conn """
+        CREATE INDEX IF NOT EXISTS files__author_id
+            ON files
+            (author_id)
     """ unit
 
     execute conn """
