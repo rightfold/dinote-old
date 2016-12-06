@@ -2,7 +2,6 @@ module Main.Server
 ( main
 ) where
 
-import Control.Coroutine (emit)
 import Control.Monad.Aff (launchAff)
 import Data.ByteString as ByteString
 import Data.Map (Map)
@@ -43,8 +42,8 @@ main = launchAff do
 handle
     :: ∀ eff
      . Pool
-    -> Request (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff)
-    -> Aff (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) (Response (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff))
+    -> Request
+    -> Aff (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
 handle db req =
     case unwrap req.method, String.split (String.Pattern "/") req.path of
         "GET",  ["", ""]                                                        -> static "text/html" "index.html"
@@ -54,58 +53,60 @@ handle db req =
         "GET",  ["", "api", "v1", "files", fileID, "vertices", vertexID]        -> handleVertex db (VertexID vertexID)
         "POST", ["", "api", "v1", "files", fileID, "edges", parentID, childID]  ->
             handleCreateEdge db {parentID: VertexID parentID, childID: VertexID childID}
+        "POST", ["", "api", "v1", "session"] ->
+            notFound <$ traceAnyA req.body
         _, _ -> pure notFound
 
-static :: ∀ eff. String -> String -> Aff (fs :: FS | eff) (Response (fs :: FS | eff))
+static :: ∀ eff. String -> String -> Aff (fs :: FS | eff) Response
 static mime path = do
     contents <- liftEff' $ ByteString.unsafeFreeze <$> readFile path
     pure { status: {code: 200, message: "OK"}
          , headers: Map.singleton (CaseInsensitiveString "content-type") mime
-         , body: emit $ contents
+         , body: contents
          }
 
 handleCreateVertex
     :: ∀ eff
      . Pool
     -> FileID
-    -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) (Response (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff))
+    -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
 handleCreateVertex db fileID = do
     vertexID <- withConnection db $ Vertex.DB.createVertex `flip` fileID
     pure { status: {code: 200, message: "OK"}
          , headers: Map.empty :: Map CaseInsensitiveString String
-         , body: emit $ ByteString.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
+         , body: ByteString.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
          }
 
 handleCreateEdge
     :: ∀ eff
      . Pool
     -> {parentID :: VertexID, childID :: VertexID}
-    -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
+    -> Aff (postgreSQL :: POSTGRESQL | eff) Response
 handleCreateEdge db edge = do
     withConnection db (Vertex.DB.createEdge `flip` edge)
     pure { status: {code: 200, message: "OK"}
          , headers: Map.empty :: Map CaseInsensitiveString String
-         , body: pure unit
+         , body: ByteString.empty
          }
 
 handleVertex
     :: ∀ eff
      . Pool
     -> VertexID
-    -> Aff (postgreSQL :: POSTGRESQL | eff) (Response (postgreSQL :: POSTGRESQL | eff))
+    -> Aff (postgreSQL :: POSTGRESQL | eff) Response
 handleVertex db vertexID =
     withConnection db (Vertex.DB.readVertex `flip` vertexID)
     >>= case _ of
         Just vertex ->
             pure { status: {code: 200, message: "OK"}
                  , headers: Map.empty :: Map CaseInsensitiveString String
-                 , body: emit $ ByteString.fromString (Sexp.toString $ Sexp.toSexp vertex) UTF8
+                 , body: ByteString.fromString (Sexp.toString $ Sexp.toSexp vertex) UTF8
                  }
         Nothing -> pure notFound
 
-notFound :: ∀ eff. Response eff
+notFound :: Response
 notFound =
     { status: {code: 404, message: "Not Found"}
     , headers: Map.empty :: Map CaseInsensitiveString String
-    , body: pure unit
+    , body: ByteString.empty
     }

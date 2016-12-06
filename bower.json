@@ -7,7 +7,7 @@
     "purescript-aff": "^2.0.1",
     "purescript-free": "^3.0.1",
     "purescript-lists": "~3.2.1",
-    "purescript-monoid": "~2.0.0",
+    "purescript-monoid": "^2.0.0",
     "purescript-functors": "~1.0.0",
     "purescript-tailrec": "~2.0.1",
     "purescript-foldable-traversable": "~2.0.0",
@@ -20,7 +20,6 @@
     "purescript-affjax": "^3.0.1",
     "purescript-aff-bus": "^1.0.0",
     "purescript-strings": "^2.0.2",
-    "purescript-coroutines": "^3.1.0",
     "purescript-node-buffer": "^2.0.0",
     "purescript-node-http": "^3.0.1",
     "purescript-node-streams": "^2.0.0",
@@ -35,6 +34,6 @@
     "purescript-profunctor-lenses": "^2.2.0",
     "purescript-control": "^2.0.0",
     "purescript-newtype": "^1.1.0",
-    "purescript-bytestrings": "^0.0.1"
+    "purescript-bytestrings": "^0.0.2"
   }
 }
