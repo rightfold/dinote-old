@@ -11,6 +11,7 @@ import Data.String as String
 import Data.String.CaseInsensitive (CaseInsensitiveString(..))
 import Data.UUID (GENUUID)
 import Database.PostgreSQL (newPool, Pool, POSTGRESQL, withConnection)
+import Database.Stormpath (STORMPATH)
 import Database.Stormpath as Stormpath
 import Network.HTTP.Message (Request, Response)
 import Network.HTTP.Node (nodeHandler)
@@ -26,7 +27,7 @@ import NN.Server.Vertex.DB as Vertex.DB
 import NN.Vertex (VertexID(..))
 
 main = launchAff do
-    stormPathApp <- do
+    stormpath <- do
         apiKeyIDM     <- liftEff $ lookupEnv "NN_STORMPATH_API_KEY"
         apiKeySecretM <- liftEff $ lookupEnv "NN_STORMPATH_API_SECRET"
         appHrefM      <- liftEff $ lookupEnv "NN_STORMPATH_APPLICATION_HREF"
@@ -36,7 +37,6 @@ main = launchAff do
                 # Stormpath.newClient
                 >>= Stormpath.getApplication `flip` appHref
             _, _, _-> liftEff $ exit 1
-    traceAnyA stormPathApp
 
     db <- newPool { user: "postgres"
                   , password: "lol123"
@@ -50,15 +50,16 @@ main = launchAff do
     withConnection db setupDB
 
     liftEff do
-        server <- createServer $ nodeHandler $ handle db
+        server <- createServer $ nodeHandler $ handle db stormpath
         listen server {hostname: "localhost", port: 1337, backlog: Nothing} (pure unit)
 
 handle
     :: ∀ eff
      . Pool
+    -> Stormpath.Application
     -> Request
-    -> Aff (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
-handle db req =
+    -> Aff (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL, stormpath :: STORMPATH | eff) Response
+handle db stormpath req =
     case unwrap req.method, String.split (String.Pattern "/") req.path of
         "GET",  ["", ""]                                                        -> static "text/html" "index.html"
         "GET",  ["", "output", "nn.js"]                                         -> static "application/javascript" "output/nn.js"
@@ -68,8 +69,12 @@ handle db req =
         "POST", ["", "api", "v1", "files", fileID, "edges", parentID, childID]  ->
             handleCreateEdge db {parentID: VertexID parentID, childID: VertexID childID}
         "POST", ["", "api", "v1", "session"] ->
-            notFound <$ traceAnyA req.body
-        _, _ -> pure notFound
+            case Sexp.fromString (ByteString.toString req.body UTF8) >>= Sexp.fromSexp of
+                Just (username /\ password) -> do
+                    traceAnyA =<< Stormpath.authenticateAccount stormpath username password
+                    pure $ error 200
+                Nothing -> pure $ error 400
+        _, _ -> pure $ error 404
 
 static :: ∀ eff. String -> String -> Aff (fs :: FS | eff) Response
 static mime path = do
@@ -116,11 +121,11 @@ handleVertex db vertexID =
                  , headers: Map.empty :: Map CaseInsensitiveString String
                  , body: ByteString.fromString (Sexp.toString $ Sexp.toSexp vertex) UTF8
                  }
-        Nothing -> pure notFound
+        Nothing -> pure $ error 404
 
-notFound :: Response
-notFound =
-    { status: {code: 404, message: "Not Found"}
+error :: Int -> Response
+error code =
+    { status: {code, message: ""}
     , headers: Map.empty :: Map CaseInsensitiveString String
     , body: ByteString.empty
     }

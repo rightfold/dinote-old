@@ -26,7 +26,7 @@ nodeHandler h nReq nRes =
         for_ (Map.toList res.headers) \(Tuple (CaseInsensitiveString k) v) ->
             liftEff $ N.setHeader nRes k v
         let nResBody = N.responseAsStream nRes
-        makeAff \_ ok -> void $ Stream.write (N.responseAsStream nRes) (ByteString.unsafeThaw res.body) (ok unit)
+        liftEff $ Stream.write nResBody (ByteString.unsafeThaw res.body) (pure unit)
         makeAff \_ ok -> Stream.end nResBody (ok unit)
     where
     method = CaseInsensitiveString (N.requestMethod nReq)

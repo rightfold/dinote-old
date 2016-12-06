@@ -34,3 +34,28 @@ exports.getApplication = function(client) {
         };
     };
 };
+
+exports.authenticateAccount = function(application) {
+    return function(username) {
+        return function(password) {
+            return function(onSuccess, onError) {
+                application.authenticateAccount({
+                    username: username,
+                    password: password,
+                }, function(err, authenticationResult) {
+                    if (err !== null) {
+                        onError(err);
+                        return;
+                    }
+                    authenticationResult.getAccount(function(err, account) {
+                        if (err !== null) {
+                            onError(err);
+                            return;
+                        }
+                        onSuccess(account);
+                    });
+                });
+            };
+        };
+    };
+};
