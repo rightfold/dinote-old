@@ -23,7 +23,8 @@ import Node.Process (exit, lookupEnv)
 import NN.File (FileID(..))
 import NN.Prelude
 import NN.Server.Setup (setupDB)
-import NN.Server.Vertex.DB as Vertex.DB
+import NN.Server.Vertex.DSL as Vertex.DSL
+import NN.Server.Vertex.DSL.Interpret.DB (runVertexDSL)
 import NN.Vertex (VertexID(..))
 
 main = launchAff do
@@ -65,9 +66,9 @@ handle db stormpath req =
         "GET",  ["", "output", "nn.js"]                                         -> static "application/javascript" "output/nn.js"
         "GET",  ["", "output", "nn.css"]                                        -> static "text/css" "output/nn.css"
         "POST", ["", "api", "v1", "files", fileID, "vertices"]                  -> handleCreateVertex db (FileID fileID)
-        "GET",  ["", "api", "v1", "files", fileID, "vertices", vertexID]        -> handleVertex db (VertexID vertexID)
+        "GET",  ["", "api", "v1", "files", fileID, "vertices", vertexID]        -> handleVertex db (FileID fileID) (VertexID vertexID)
         "POST", ["", "api", "v1", "files", fileID, "edges", parentID, childID]  ->
-            handleCreateEdge db {parentID: VertexID parentID, childID: VertexID childID}
+            handleCreateEdge db (FileID fileID) {parentID: VertexID parentID, childID: VertexID childID}
         "POST", ["", "api", "v1", "session"] ->
             case Sexp.fromString (ByteString.toString req.body UTF8) >>= Sexp.fromSexp of
                 Just (username /\ password) -> do
@@ -90,7 +91,7 @@ handleCreateVertex
     -> FileID
     -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
 handleCreateVertex db fileID = do
-    vertexID <- withConnection db $ Vertex.DB.createVertex `flip` fileID
+    vertexID <- withConnection db $ runVertexDSL `flip` (Vertex.DSL.createVertex fileID)
     pure { status: {code: 200, message: "OK"}
          , headers: Map.empty :: Map CaseInsensitiveString String
          , body: ByteString.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
@@ -99,10 +100,11 @@ handleCreateVertex db fileID = do
 handleCreateEdge
     :: ∀ eff
      . Pool
+    -> FileID
     -> {parentID :: VertexID, childID :: VertexID}
-    -> Aff (postgreSQL :: POSTGRESQL | eff) Response
-handleCreateEdge db edge = do
-    withConnection db (Vertex.DB.createEdge `flip` edge)
+    -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
+handleCreateEdge db fileID edge = do
+    withConnection db $ runVertexDSL `flip` (Vertex.DSL.createEdge fileID edge)
     pure { status: {code: 200, message: "OK"}
          , headers: Map.empty :: Map CaseInsensitiveString String
          , body: ByteString.empty
@@ -111,10 +113,11 @@ handleCreateEdge db edge = do
 handleVertex
     :: ∀ eff
      . Pool
+    -> FileID
     -> VertexID
-    -> Aff (postgreSQL :: POSTGRESQL | eff) Response
-handleVertex db vertexID =
-    withConnection db (Vertex.DB.readVertex `flip` vertexID)
+    -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
+handleVertex db fileID vertexID =
+    withConnection db (runVertexDSL `flip` (Vertex.DSL.getVertex fileID vertexID))
     >>= case _ of
         Just vertex ->
             pure { status: {code: 200, message: "OK"}
