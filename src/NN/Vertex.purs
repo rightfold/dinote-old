@@ -7,28 +7,29 @@ module NN.Vertex
 ) where
 
 import Data.Lens (Lens', lens)
-import Data.Generic (class Generic, gShow)
-import Data.Sexp (class AsSexp, gFromSexp, gToSexp, class FromSexp, class ToSexp)
+import Data.Generic.Rep (class Generic)
+import Data.Generic.Rep.Show (genericShow)
+import Data.Sexp (class AsSexp, genericFromSexp, genericToSexp, class FromSexp, class ToSexp)
 import NN.Prelude
 import NN.Vertex.Style (Style)
 
 newtype VertexID = VertexID String
 
-derive instance genericVertexID :: Generic VertexID
+derive instance genericVertexID :: Generic VertexID _
 derive instance eqVertexID :: Eq VertexID
 derive instance ordVertexID :: Ord VertexID
-instance fromSexpVertexID :: FromSexp VertexID where fromSexp = gFromSexp
-instance toSexpVertexID :: ToSexp VertexID where toSexp = gToSexp
+instance fromSexpVertexID :: FromSexp VertexID where fromSexp = genericFromSexp
+instance toSexpVertexID :: ToSexp VertexID where toSexp = genericToSexp
 instance asSexpVertexID :: AsSexp VertexID
-instance showVertexID :: Show VertexID where show = gShow
+instance showVertexID :: Show VertexID where show = genericShow
 
 data Vertex = Vertex String (List VertexID) Style
 
-derive instance genericVertex :: Generic Vertex
-instance showVertex :: Show Vertex where show = gShow
-instance fromSexpVertex :: FromSexp Vertex where fromSexp = gFromSexp
-instance toSexpVertex :: ToSexp Vertex where toSexp = gToSexp
+derive instance genericVertex :: Generic Vertex _
+instance fromSexpVertex :: FromSexp Vertex where fromSexp = genericFromSexp
+instance toSexpVertex :: ToSexp Vertex where toSexp = genericToSexp
 instance asSexpVertex :: AsSexp Vertex
+instance showVertex :: Show Vertex where show = genericShow
 
 vertexNote :: Lens' Vertex String
 vertexNote = lens (\(Vertex a _ _) -> a) (\(Vertex _ b c) a -> Vertex a b c)

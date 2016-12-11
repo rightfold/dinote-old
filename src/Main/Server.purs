@@ -32,6 +32,7 @@ import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
 import NN.Server.Vertex.DSL as Vertex.DSL
 import NN.Server.Vertex.DSL.Interpret.Authorization as Vertex.DSL.Interpret.Authorization
 import NN.Server.Vertex.DSL.Interpret.DB as Vertex.DSL.Interpret.DB
+import NN.Server.Vertex.Web (handleCreateVertex)
 import NN.User (UserID)
 import NN.Vertex (VertexID(..))
 
@@ -73,7 +74,14 @@ handle db stormpath req =
         "GET",  ["", ""]                                                        -> static "text/html" "index.html"
         "GET",  ["", "output", "nn.js"]                                         -> static "application/javascript" "output/nn.js"
         "GET",  ["", "output", "nn.css"]                                        -> static "text/css" "output/nn.css"
-        "POST", ["", "api", "v1", "files", fileID, "vertices"]                  -> handleCreateVertex db (FileID fileID)
+        "POST", ["", "api", "v1", "files", fileID, "vertices"]                  ->
+            withConnection db (\conn ->
+                runMaybeT $
+                    runVertexDSLAuthorizationDB conn Nothing $
+                        handleCreateVertex (FileID fileID) req)
+            <#> case _ of
+                Just res -> res
+                Nothing -> error 403
         "GET",  ["", "api", "v1", "files", fileID, "vertices", vertexID]        -> handleVertex db (FileID fileID) (VertexID vertexID)
         "POST", ["", "api", "v1", "files", fileID, "edges", parentID, childID]  ->
             handleCreateEdge db (FileID fileID) {parentID: VertexID parentID, childID: VertexID childID}
@@ -92,21 +100,6 @@ static mime path = do
          , headers: Map.singleton (CaseInsensitiveString "content-type") mime
          , body: contents
          }
-
-handleCreateVertex
-    :: ∀ eff
-     . Pool
-    -> FileID
-    -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
-handleCreateVertex db fileID =
-    withConnection db (\conn -> runMaybeT $ runVertexDSLAuthorizationDB conn Nothing (Vertex.DSL.createVertex fileID))
-    <#> case _ of
-        Just vertexID ->
-            { status: {code: 200, message: "OK"}
-            , headers: Map.empty :: Map CaseInsensitiveString String
-            , body: ByteString.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
-            }
-        Nothing -> error 403
 
 handleCreateEdge
     :: ∀ eff
