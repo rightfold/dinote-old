@@ -1,5 +1,6 @@
 module NN.Prelude
 ( module Control.Monad.Aff
+, module Control.Monad.Aff.Class
 , module Control.Monad.Eff
 , module Control.Monad.Eff.Class
 , module Data.Either
@@ -18,6 +19,7 @@ module NN.Prelude
 ) where
 
 import Control.Monad.Aff (Aff)
+import Control.Monad.Aff.Class (liftAff)
 import Control.Monad.Eff (Eff)
 import Control.Monad.Eff.Class (liftEff)
 import Control.Monad.Eff.Exception (EXCEPTION)

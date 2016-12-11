@@ -1,0 +1,39 @@
+module NN.Server.Authorization.DSL.Interpret.DB
+( runAuthorizationDSL
+) where
+
+import Control.Monad.Free (foldFree)
+import Control.Monad.Maybe.Trans (MaybeT)
+import Control.Monad.Reader.Class as Reader
+import Control.Monad.Reader.Trans (ReaderT)
+import Control.Plus as Plus
+import Database.PostgreSQL (Connection, POSTGRESQL, query)
+import NN.File (FileID(..))
+import NN.Prelude
+import NN.Server.Authorization.DSL (AuthorizationDSL, AuthorizationDSLF(..))
+import NN.User (UserID(..))
+
+type Monad eff = ReaderT (Maybe UserID) (MaybeT (Aff (postgreSQL :: POSTGRESQL | eff)))
+
+runAuthorizationDSL
+    :: ∀ eff
+     . Connection
+    -> AuthorizationDSL
+    ~> Monad eff
+runAuthorizationDSL conn = foldFree go
+    where
+    go :: AuthorizationDSLF ~> Monad eff
+    go (VerifyAuthorizedForFile (FileID fileID) next) =
+        Reader.ask >>= case _ of
+            Nothing -> Plus.empty
+            Just (UserID userID) ->
+                liftAff (query conn """
+                    SELECT
+                    FROM files
+                    WHERE
+                            id = $1
+                        AND author_id = $2
+                """ (fileID /\ userID /\ unit))
+                >>= case _ of
+                    [(_ :: Unit)] -> pure next
+                    _ -> Plus.empty

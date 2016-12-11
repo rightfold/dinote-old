@@ -1,6 +1,6 @@
 module NN.Server.Authorization.DSL
 ( AuthorizationDSL
-, AuthorizationDSLF
+, AuthorizationDSLF(..)
 , verifyAuthorizedForFile
 ) where
 
