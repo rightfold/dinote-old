@@ -3,6 +3,10 @@ module Main.Server
 ) where
 
 import Control.Monad.Aff (launchAff)
+import Control.Monad.Free (foldFree)
+import Control.Monad.Maybe.Trans (MaybeT, runMaybeT)
+import Control.Monad.Reader.Trans (runReaderT)
+import Control.Monad.Trans.Class (lift)
 import Data.ByteString as ByteString
 import Data.Map (Map)
 import Data.Map as Map
@@ -10,7 +14,7 @@ import Data.Sexp as Sexp
 import Data.String as String
 import Data.String.CaseInsensitive (CaseInsensitiveString(..))
 import Data.UUID (GENUUID)
-import Database.PostgreSQL (newPool, Pool, POSTGRESQL, withConnection)
+import Database.PostgreSQL (Connection, newPool, Pool, POSTGRESQL, withConnection)
 import Database.Stormpath (STORMPATH)
 import Database.Stormpath as Stormpath
 import Network.HTTP.Message (Request, Response)
@@ -22,9 +26,13 @@ import Node.HTTP (createServer, listen)
 import Node.Process (exit, lookupEnv)
 import NN.File (FileID(..))
 import NN.Prelude
+import NN.Server.Authorization.DSL.Interpret.DB (runAuthorizationDSL)
 import NN.Server.Setup (setupDB)
+import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
 import NN.Server.Vertex.DSL as Vertex.DSL
-import NN.Server.Vertex.DSL.Interpret.DB (runVertexDSL)
+import NN.Server.Vertex.DSL.Interpret.Authorization as Vertex.DSL.Interpret.Authorization
+import NN.Server.Vertex.DSL.Interpret.DB as Vertex.DSL.Interpret.DB
+import NN.User (UserID)
 import NN.Vertex (VertexID(..))
 
 main = launchAff do
@@ -90,12 +98,15 @@ handleCreateVertex
      . Pool
     -> FileID
     -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
-handleCreateVertex db fileID = do
-    vertexID <- withConnection db $ runVertexDSL `flip` (Vertex.DSL.createVertex fileID)
-    pure { status: {code: 200, message: "OK"}
-         , headers: Map.empty :: Map CaseInsensitiveString String
-         , body: ByteString.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
-         }
+handleCreateVertex db fileID =
+    withConnection db (\conn -> runMaybeT $ runVertexDSLAuthorizationDB conn Nothing (Vertex.DSL.createVertex fileID))
+    <#> case _ of
+        Just vertexID ->
+            { status: {code: 200, message: "OK"}
+            , headers: Map.empty :: Map CaseInsensitiveString String
+            , body: ByteString.fromString (Sexp.toString $ Sexp.toSexp vertexID) UTF8
+            }
+        Nothing -> error 403
 
 handleCreateEdge
     :: ∀ eff
@@ -103,12 +114,15 @@ handleCreateEdge
     -> FileID
     -> {parentID :: VertexID, childID :: VertexID}
     -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
-handleCreateEdge db fileID edge = do
-    withConnection db $ runVertexDSL `flip` (Vertex.DSL.createEdge fileID edge)
-    pure { status: {code: 200, message: "OK"}
-         , headers: Map.empty :: Map CaseInsensitiveString String
-         , body: ByteString.empty
-         }
+handleCreateEdge db fileID edge =
+    withConnection db (\conn -> runMaybeT $ runVertexDSLAuthorizationDB conn Nothing (Vertex.DSL.createEdge fileID edge))
+    <#> case _ of
+        Just _ ->
+            { status: {code: 200, message: "OK"}
+            , headers: Map.empty :: Map CaseInsensitiveString String
+            , body: ByteString.empty
+            }
+        Nothing -> error 403
 
 handleVertex
     :: ∀ eff
@@ -117,14 +131,15 @@ handleVertex
     -> VertexID
     -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
 handleVertex db fileID vertexID =
-    withConnection db (runVertexDSL `flip` (Vertex.DSL.getVertex fileID vertexID))
-    >>= case _ of
-        Just vertex ->
-            pure { status: {code: 200, message: "OK"}
-                 , headers: Map.empty :: Map CaseInsensitiveString String
-                 , body: ByteString.fromString (Sexp.toString $ Sexp.toSexp vertex) UTF8
-                 }
-        Nothing -> pure $ error 404
+    withConnection db (\conn -> runMaybeT $ runVertexDSLAuthorizationDB conn Nothing (Vertex.DSL.getVertex fileID vertexID))
+    <#> case _ of
+        Just (Just vertex) ->
+            { status: {code: 200, message: "OK"}
+            , headers: Map.empty :: Map CaseInsensitiveString String
+            , body: ByteString.fromString (Sexp.toString $ Sexp.toSexp vertex) UTF8
+            }
+        Just Nothing -> error 404
+        Nothing -> error 403
 
 error :: Int -> Response
 error code =
@@ -132,3 +147,18 @@ error code =
     , headers: Map.empty :: Map CaseInsensitiveString String
     , body: ByteString.empty
     }
+
+runVertexDSLAuthorizationDB
+    :: ∀ eff
+     . Connection
+    -> Maybe UserID
+    -> VertexDSL
+    ~> MaybeT (Aff (postgreSQL :: POSTGRESQL, uuid :: GENUUID | eff))
+runVertexDSLAuthorizationDB conn userID = foldFree go
+    where
+    go :: VertexDSLF ~> MaybeT (Aff (postgreSQL :: POSTGRESQL, uuid :: GENUUID | eff))
+    go action = do
+        flip runReaderT userID $
+            runAuthorizationDSL conn $
+                Vertex.DSL.Interpret.Authorization.runVertexDSLF action
+        lift $ Vertex.DSL.Interpret.DB.runVertexDSLF conn action

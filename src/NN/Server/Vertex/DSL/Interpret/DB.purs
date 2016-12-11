@@ -1,5 +1,6 @@
 module NN.Server.Vertex.DSL.Interpret.DB
 ( runVertexDSL
+, runVertexDSLF
 ) where
 
 import Control.Monad.Free (foldFree)
@@ -14,9 +15,13 @@ runVertexDSL
      . Connection
     -> VertexDSL
     ~> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff)
-runVertexDSL conn = foldFree go
-    where
-    go :: VertexDSLF ~> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff)
-    go (GetVertex fileID vertexID next) = next <$> DB.readVertex conn vertexID
-    go (CreateVertex fileID next) = next <$> DB.createVertex conn fileID
-    go (CreateEdge fileID edge next) = next <$ DB.createEdge conn edge
+runVertexDSL conn = foldFree (runVertexDSLF conn)
+
+runVertexDSLF
+    :: ∀ eff
+     . Connection
+    -> VertexDSLF
+    ~> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff)
+runVertexDSLF conn (GetVertex fileID vertexID next) = next <$> DB.readVertex conn vertexID
+runVertexDSLF conn (CreateVertex fileID next) = next <$> DB.createVertex conn fileID
+runVertexDSLF conn (CreateEdge fileID edge next) = next <$ DB.createEdge conn edge

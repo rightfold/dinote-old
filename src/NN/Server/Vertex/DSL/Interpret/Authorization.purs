@@ -1,4 +1,4 @@
-module NN.Server.Vertex.DSL.Authorization
+module NN.Server.Vertex.DSL.Interpret.Authorization
 ( runVertexDSLF
 ) where
 
