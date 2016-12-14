@@ -29,7 +29,6 @@ import NN.Prelude
 import NN.Server.Authorization.DSL.Interpret.DB (runAuthorizationDSL)
 import NN.Server.Setup (setupDB)
 import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
-import NN.Server.Vertex.DSL as Vertex.DSL
 import NN.Server.Vertex.DSL.Interpret.Authorization as Vertex.DSL.Interpret.Authorization
 import NN.Server.Vertex.DSL.Interpret.DB as Vertex.DSL.Interpret.DB
 import NN.Server.Vertex.Web (handleCreateEdge, handleCreateVertex, handleGetVertex)
