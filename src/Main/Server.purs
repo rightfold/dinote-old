@@ -32,7 +32,7 @@ import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
 import NN.Server.Vertex.DSL as Vertex.DSL
 import NN.Server.Vertex.DSL.Interpret.Authorization as Vertex.DSL.Interpret.Authorization
 import NN.Server.Vertex.DSL.Interpret.DB as Vertex.DSL.Interpret.DB
-import NN.Server.Vertex.Web (handleCreateVertex)
+import NN.Server.Vertex.Web (handleCreateEdge, handleCreateVertex, handleGetVertex)
 import NN.User (UserID)
 import NN.Vertex (VertexID(..))
 
@@ -82,9 +82,22 @@ handle db stormpath req =
             <#> case _ of
                 Just res -> res
                 Nothing -> error 403
-        "GET",  ["", "api", "v1", "files", fileID, "vertices", vertexID]        -> handleVertex db (FileID fileID) (VertexID vertexID)
+        "GET",  ["", "api", "v1", "files", fileID, "vertices", vertexID]        ->
+            withConnection db (\conn ->
+                runMaybeT $
+                    runVertexDSLAuthorizationDB conn Nothing $
+                        handleGetVertex (FileID fileID) (VertexID vertexID) req)
+            <#> case _ of
+                Just res -> res
+                Nothing -> error 403
         "POST", ["", "api", "v1", "files", fileID, "edges", parentID, childID]  ->
-            handleCreateEdge db (FileID fileID) {parentID: VertexID parentID, childID: VertexID childID}
+            withConnection db (\conn ->
+                runMaybeT $
+                    runVertexDSLAuthorizationDB conn Nothing $
+                        handleCreateEdge (FileID fileID) {parentID: VertexID parentID, childID: VertexID childID} req)
+            <#> case _ of
+                Just res -> res
+                Nothing -> error 403
         "POST", ["", "api", "v1", "session"] ->
             case Sexp.fromString (ByteString.toString req.body UTF8) >>= Sexp.fromSexp of
                 Just (username /\ password) -> do
@@ -100,39 +113,6 @@ static mime path = do
          , headers: Map.singleton (CaseInsensitiveString "content-type") mime
          , body: contents
          }
-
-handleCreateEdge
-    :: ∀ eff
-     . Pool
-    -> FileID
-    -> {parentID :: VertexID, childID :: VertexID}
-    -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
-handleCreateEdge db fileID edge =
-    withConnection db (\conn -> runMaybeT $ runVertexDSLAuthorizationDB conn Nothing (Vertex.DSL.createEdge fileID edge))
-    <#> case _ of
-        Just _ ->
-            { status: {code: 200, message: "OK"}
-            , headers: Map.empty :: Map CaseInsensitiveString String
-            , body: ByteString.empty
-            }
-        Nothing -> error 403
-
-handleVertex
-    :: ∀ eff
-     . Pool
-    -> FileID
-    -> VertexID
-    -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) Response
-handleVertex db fileID vertexID =
-    withConnection db (\conn -> runMaybeT $ runVertexDSLAuthorizationDB conn Nothing (Vertex.DSL.getVertex fileID vertexID))
-    <#> case _ of
-        Just (Just vertex) ->
-            { status: {code: 200, message: "OK"}
-            , headers: Map.empty :: Map CaseInsensitiveString String
-            , body: ByteString.fromString (Sexp.toString $ Sexp.toSexp vertex) UTF8
-            }
-        Just Nothing -> error 404
-        Nothing -> error 403
 
 error :: Int -> Response
 error code =
