@@ -29,7 +29,7 @@ notFound =
 
 forbidden :: Response
 forbidden =
-    { status: {code: 401, message: "forbidden"}
+    { status: {code: 403, message: "Forbidden"}
     , headers: Map.empty :: Map CaseInsensitiveString String
     , body: ByteString.empty
     }
