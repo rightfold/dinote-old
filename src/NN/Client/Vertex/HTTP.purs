@@ -33,5 +33,5 @@ createEdge
     -> {parentID :: VertexID, childID :: VertexID}
     -> Aff (ajax :: AJAX | eff) Unit
 createEdge (FileID fileID) {parentID: VertexID parentID, childID: VertexID childID} =
-    Affjax.post ("/api/v1/files/" <> fileID <> "/edges/" <> parentID <> "/" <> childID) unit
+    Affjax.post ("/api/v1/files/" <> fileID <> "/vertices/" <> parentID <> "/children/" <> childID) unit
     <#> _.response

@@ -8,6 +8,7 @@ import Control.Monad.Maybe.Trans (MaybeT, runMaybeT)
 import Control.Monad.Reader.Trans (runReaderT)
 import Control.Monad.Trans.Class (lift)
 import Data.ByteString as ByteString
+import Data.List as List
 import Data.Map (Map)
 import Data.Map as Map
 import Data.Sexp as Sexp
@@ -31,9 +32,8 @@ import NN.Server.Setup (setupDB)
 import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
 import NN.Server.Vertex.DSL.Interpret.Authorization as Vertex.DSL.Interpret.Authorization
 import NN.Server.Vertex.DSL.Interpret.DB as Vertex.DSL.Interpret.DB
-import NN.Server.Vertex.Web (handleCreateEdge, handleCreateVertex, handleGetVertex)
+import NN.Server.Vertex.Web (handleVertexAPI)
 import NN.User (UserID)
-import NN.Vertex (VertexID(..))
 
 main = launchAff do
     stormpath <- do
@@ -69,35 +69,19 @@ handle
     -> Request
     -> Aff (fs :: FS, uuid :: GENUUID, postgreSQL :: POSTGRESQL, stormpath :: STORMPATH | eff) Response
 handle db stormpath req =
-    case unwrap req.method, String.split (String.Pattern "/") req.path of
-        "GET",  ["", ""]                                                        -> static "text/html" "index.html"
-        "GET",  ["", "output", "nn.js"]                                         -> static "application/javascript" "output/nn.js"
-        "GET",  ["", "output", "nn.css"]                                        -> static "text/css" "output/nn.css"
-        "POST", ["", "api", "v1", "files", fileID, "vertices"]                  ->
+    case unwrap req.method, List.fromFoldable (String.split (String.Pattern "/") req.path) of
+        "GET",  "" : "" : Nil                                                   -> static "text/html" "index.html"
+        "GET",  "" : "output" : "nn.js" : Nil                                   -> static "application/javascript" "output/nn.js"
+        "GET",  "" : "output" : "nn.css" : Nil                                  -> static "text/css" "output/nn.css"
+        method, "" : "api" : "v1" : "files" : fileID : "vertices" : path ->
             withConnection db (\conn ->
                 runMaybeT $
                     runVertexDSLAuthorizationDB conn Nothing $
-                        handleCreateVertex (FileID fileID) req)
+                        handleVertexAPI (FileID fileID) method path req)
             <#> case _ of
                 Just res -> res
                 Nothing -> error 403
-        "GET",  ["", "api", "v1", "files", fileID, "vertices", vertexID]        ->
-            withConnection db (\conn ->
-                runMaybeT $
-                    runVertexDSLAuthorizationDB conn Nothing $
-                        handleGetVertex (FileID fileID) (VertexID vertexID) req)
-            <#> case _ of
-                Just res -> res
-                Nothing -> error 403
-        "POST", ["", "api", "v1", "files", fileID, "edges", parentID, childID]  ->
-            withConnection db (\conn ->
-                runMaybeT $
-                    runVertexDSLAuthorizationDB conn Nothing $
-                        handleCreateEdge (FileID fileID) {parentID: VertexID parentID, childID: VertexID childID} req)
-            <#> case _ of
-                Just res -> res
-                Nothing -> error 403
-        "POST", ["", "api", "v1", "session"] ->
+        "POST", "" : "api" : "v1" : "session" : Nil ->
             case Sexp.fromString (ByteString.toString req.body UTF8) >>= Sexp.fromSexp of
                 Just (username /\ password) -> do
                     traceAnyA =<< Stormpath.authenticateAccount stormpath username password
