@@ -9,6 +9,7 @@ module Database.Stormpath
 , newClient
 , getApplication
 , authenticateAccount
+, accountHref
 ) where
 
 import NN.Prelude
@@ -22,3 +23,4 @@ foreign import newAPIKey :: String -> String -> APIKey
 foreign import newClient :: ∀ eff. APIKey -> Aff (stormpath :: STORMPATH | eff) Client
 foreign import getApplication :: ∀ eff. Client -> String -> Aff (stormpath :: STORMPATH | eff) Application
 foreign import authenticateAccount :: ∀ eff. Application -> String -> String -> Aff (stormpath :: STORMPATH | eff) Account
+foreign import accountHref :: Account -> String

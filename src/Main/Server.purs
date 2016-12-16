@@ -18,6 +18,7 @@ import Data.UUID (GENUUID)
 import Database.PostgreSQL (Connection, newPool, Pool, POSTGRESQL, withConnection)
 import Database.Stormpath (STORMPATH)
 import Database.Stormpath as Stormpath
+import Network.HTTP.Cookie (getCookie, setCookie)
 import Network.HTTP.Message (Request, Response)
 import Network.HTTP.Node (nodeHandler)
 import Node.Encoding (Encoding(UTF8))
@@ -33,7 +34,7 @@ import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
 import NN.Server.Vertex.DSL.Interpret.Authorization as Vertex.DSL.Interpret.Authorization
 import NN.Server.Vertex.DSL.Interpret.DB as Vertex.DSL.Interpret.DB
 import NN.Server.Vertex.Web (handleVertexAPI)
-import NN.User (UserID)
+import NN.User (UserID(..))
 
 main = launchAff do
     stormpath <- do
@@ -76,7 +77,7 @@ handle db stormpath req =
         method, "" : "api" : "v1" : "files" : fileID : "vertices" : path ->
             withConnection db (\conn ->
                 runMaybeT $
-                    runVertexDSLAuthorizationDB conn Nothing $
+                    runVertexDSLAuthorizationDB conn (UserID <$> getCookie "session" req) $
                         handleVertexAPI (FileID fileID) method path req)
             <#> case _ of
                 Just res -> res
@@ -84,8 +85,9 @@ handle db stormpath req =
         "POST", "" : "api" : "v1" : "session" : Nil ->
             case Sexp.fromString (ByteString.toString req.body UTF8) >>= Sexp.fromSexp of
                 Just (username /\ password) -> do
-                    traceAnyA =<< Stormpath.authenticateAccount stormpath username password
-                    pure $ error 200
+                    account <- Stormpath.authenticateAccount stormpath username password
+                    let accountHref = Stormpath.accountHref account
+                    pure $ setCookie "session" accountHref (error 200)
                 Nothing -> pure $ error 400
         _, _ -> pure $ error 404
 

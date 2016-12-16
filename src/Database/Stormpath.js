@@ -59,3 +59,7 @@ exports.authenticateAccount = function(application) {
         };
     };
 };
+
+exports.accountHref = function(a) {
+    return a.href;
+};
