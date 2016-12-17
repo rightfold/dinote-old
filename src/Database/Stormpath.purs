@@ -12,6 +12,7 @@ module Database.Stormpath
 , accountHref
 ) where
 
+import Data.Password (Password)
 import NN.Prelude
 
 foreign import data STORMPATH :: !
@@ -22,5 +23,5 @@ foreign import data Account :: *
 foreign import newAPIKey :: String -> String -> APIKey
 foreign import newClient :: ∀ eff. APIKey -> Aff (stormpath :: STORMPATH | eff) Client
 foreign import getApplication :: ∀ eff. Client -> String -> Aff (stormpath :: STORMPATH | eff) Application
-foreign import authenticateAccount :: ∀ eff. Application -> String -> String -> Aff (stormpath :: STORMPATH | eff) Account
+foreign import authenticateAccount :: ∀ eff. Application -> String -> Password -> Aff (stormpath :: STORMPATH | eff) Account
 foreign import accountHref :: Account -> String

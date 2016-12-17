@@ -12,6 +12,7 @@ newtype UserID = UserID String
 derive instance genericUserID :: Generic UserID _
 derive instance eqUserID :: Eq UserID
 derive instance ordUserID :: Ord UserID
+derive instance newtypeUserID :: Newtype UserID _
 instance fromSexpUserID :: FromSexp UserID where fromSexp = genericFromSexp
 instance toSexpUserID :: ToSexp UserID where toSexp = genericToSexp
 instance asSexpUserID :: AsSexp UserID

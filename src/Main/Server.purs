@@ -9,25 +9,24 @@ import Control.Monad.Reader.Trans (runReaderT)
 import Control.Monad.Trans.Class (lift)
 import Data.ByteString as ByteString
 import Data.List as List
-import Data.Map (Map)
 import Data.Map as Map
-import Data.Sexp as Sexp
 import Data.String as String
 import Data.String.CaseInsensitive (CaseInsensitiveString(..))
 import Data.UUID (GENUUID)
 import Database.PostgreSQL (Connection, newPool, Pool, POSTGRESQL, withConnection)
 import Database.Stormpath (STORMPATH)
 import Database.Stormpath as Stormpath
-import Network.HTTP.Cookie (getCookie, setCookie)
+import Network.HTTP.Cookie (getCookie)
 import Network.HTTP.Message (Request, Response)
 import Network.HTTP.Node (nodeHandler)
-import Node.Encoding (Encoding(UTF8))
 import Node.FS (FS)
 import Node.FS.Sync (readFile)
 import Node.HTTP (createServer, listen)
 import Node.Process (exit, lookupEnv)
 import NN.File (FileID(..))
 import NN.Prelude
+import NN.Server.Authentication.DSL.Interpret.Stormpath (runAuthenticationDSL)
+import NN.Server.Authentication.Web (handleAuthenticationAPI)
 import NN.Server.Authorization.DSL.Interpret.DB (runAuthorizationDSL)
 import NN.Server.Setup (setupDB)
 import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
@@ -83,13 +82,8 @@ handle db stormpath req =
             <#> case _ of
                 Just res -> res
                 Nothing -> Web.forbidden
-        "POST", "" : "api" : "v1" : "session" : Nil ->
-            case Sexp.fromString (ByteString.toString req.body UTF8) >>= Sexp.fromSexp of
-                Just (username /\ password) -> do
-                    account <- Stormpath.authenticateAccount stormpath username password
-                    let accountHref = Stormpath.accountHref account
-                    pure $ setCookie "session" accountHref (Web.ok unit)
-                Nothing -> pure $ Web.notFound
+        method, "" : "api" : "v1" : "session" : path ->
+            runAuthenticationDSL stormpath $ handleAuthenticationAPI method path req
         _, _ -> pure $ Web.notFound
 
 static :: ∀ eff. String -> String -> Aff (fs :: FS | eff) Response
