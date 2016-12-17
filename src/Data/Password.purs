@@ -10,5 +10,6 @@ newtype Password = Password String
 derive newtype instance eqPassword :: Eq Password
 derive newtype instance ordPassword :: Ord Password
 derive newtype instance fromSexpPassword :: FromSexp Password
+derive instance newtypePassword :: Newtype Password _
 instance toSexpPassword :: Fail "Do not serialize passwords." => ToSexp Password where toSexp = const $ Atom ""
 instance showPassword :: Show Password where show = const $ "(Password " <> show "hunter2" <> ")"

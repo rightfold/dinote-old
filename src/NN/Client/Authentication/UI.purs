@@ -37,8 +37,12 @@ ui = component {initialState, render, eval}
     render :: State -> ComponentHTML Query
     render {username, password: Password password} =
         H.div []
-            [ H.input [P.inputType P.InputEmail]
-            , H.input [P.inputType P.InputPassword]
+            [ H.input [ P.inputType P.InputEmail
+                      , E.onValueChange (E.input \s -> Alter _ { username = s })
+                      ]
+            , H.input [ P.inputType P.InputPassword
+                      , E.onValueChange (E.input \s -> Alter _ { password = Password s })
+                      ]
             , H.button [ P.buttonType P.ButtonSubmit
                        , E.onClick (E.input_ Submit)
                        ]
