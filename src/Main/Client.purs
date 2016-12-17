@@ -15,10 +15,11 @@ import Halogen.Aff.Util (awaitBody, runHalogenAff)
 import Halogen.Component as Halogen.Component
 import Halogen.Effects (HalogenEffects)
 import Halogen.VirtualDOM.Driver (runUI)
+import NN.Client.Authentication.DSL.Interpret.HTTP (runAuthenticationDSL)
 import NN.Client.Authentication.UI as Authentication.UI
-import NN.Client.DSL.Interpret (runAuthenticationDSL, runVertexDSLF)
 import NN.Client.UI as Client.UI
 import NN.Client.Vertex.DSL (VertexDSL)
+import NN.Client.Vertex.DSL.Interpret.HTTP (runVertexDSLF)
 import NN.Client.Workspace.UI as Workspace.UI
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID)

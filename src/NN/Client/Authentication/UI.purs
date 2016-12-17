@@ -49,5 +49,7 @@ ui = component {initialState, render, eval}
     eval (Alter f next) = next <$ State.modify f
     eval (Submit next) = do
         {username, password} <- State.get
-        lift $ authenticate username password
+        lift (authenticate username password) >>= case _ of
+            Just userID -> raise $ SignedIn userID
+            Nothing -> pure unit
         pure next
