@@ -17,5 +17,5 @@ handleAuthenticationAPI method path req = case method, path of
 handleAuthenticate :: Request -> AuthenticationDSL Response
 handleAuthenticate = Web.interact \(username /\ password) ->
     authenticate username password <#> case _ of
-        Just userID -> setCookie "session" (unwrap userID) (Web.ok unit)
+        Just userID -> setCookie "session" (unwrap userID) (Web.ok userID)
         Nothing -> Web.notFound

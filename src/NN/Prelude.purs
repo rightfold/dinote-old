@@ -15,6 +15,7 @@ module NN.Prelude
 , module Debug.Trace
 , module Prelude
 , type (⊕)
+, type (+)
 , liftEff'
 ) where
 
@@ -37,6 +38,7 @@ import Debug.Trace (trace, traceShow, traceAny, spy, traceAnyA, traceA, traceSho
 import Prelude
 
 infixr 6 type Coproduct as ⊕
+infixr 6 type Either as +
 
 liftEff' :: ∀ a eff. Eff (err :: EXCEPTION | eff) a -> Aff eff a
 liftEff' = liftEff <<< unsafeCoerceEff

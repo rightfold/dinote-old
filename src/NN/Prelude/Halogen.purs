@@ -7,7 +7,7 @@ module NN.Prelude.Halogen
 , module NN.Prelude
 ) where
 
-import Halogen.Component (Component, lifecycleParentComponent, parentComponent, ParentDSL, ParentHTML)
+import Halogen.Component (Component, component, ComponentDSL, ComponentHTML, lifecycleParentComponent, parentComponent, ParentDSL, ParentHTML)
 import Halogen.HTML (ClassName(..), HTML)
 import Halogen.Query (action, query, query', queryAll, queryAll')
 import Halogen.Query.EventSource (SubscribeStatus(..))

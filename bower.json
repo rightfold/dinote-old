@@ -35,6 +35,7 @@
     "purescript-newtype": "^1.1.0",
     "purescript-bytestrings": "^0.0.3",
     "purescript-node-process": "^3.0.0",
-    "purescript-generics-rep": "^4.0.0"
+    "purescript-generics-rep": "^4.0.0",
+    "purescript-const": "^2.0.0"
   }
 }
