@@ -16,7 +16,7 @@ import Data.Set as Set
 import Halogen.HTML as H
 import Halogen.HTML.Events as E
 import Halogen.HTML.Properties as P
-import NN.Client.DSL (NNDSL)
+import NN.Client.Vertex.DSL (VertexDSL)
 import NN.Client.Vertex.UI as Vertex.UI
 import NN.File (File(..), FileID(..))
 import NN.Prelude.Halogen
@@ -34,7 +34,7 @@ type Output = Void
 
 type Slot = VertexID
 
-type Monad eff = Free (Aff (avar :: AVAR | eff) ⊕ NNDSL)
+type Monad eff = Free (Aff (avar :: AVAR | eff) ⊕ VertexDSL)
 
 ui :: ∀ eff. Component HTML Query Output (Monad eff)
 ui = parentComponent {initialState, render, eval}
