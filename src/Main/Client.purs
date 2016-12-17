@@ -16,10 +16,8 @@ import Halogen.Effects (HalogenEffects)
 import Halogen.VirtualDOM.Driver (runUI)
 import Network.HTTP.Affjax (AJAX)
 import NN.Client.Authentication.DSL.Interpret.HTTP (runAuthenticationDSL)
-import NN.Client.Authentication.UI as Authentication.UI
 import NN.Client.UI as Client.UI
 import NN.Client.Vertex.DSL.Interpret.HTTP (runVertexDSLF)
-import NN.Client.Workspace.UI as Workspace.UI
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID)
 
