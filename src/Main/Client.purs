@@ -10,15 +10,14 @@ import Control.Monad.Aff.Bus as Bus
 import Control.Monad.Free (foldFree)
 import Control.Monad.Rec.Class (forever)
 import Data.Functor.Coproduct (coproduct)
-import Network.HTTP.Affjax (AJAX)
 import Halogen.Aff.Util (awaitBody, runHalogenAff)
 import Halogen.Component as Halogen.Component
 import Halogen.Effects (HalogenEffects)
 import Halogen.VirtualDOM.Driver (runUI)
+import Network.HTTP.Affjax (AJAX)
 import NN.Client.Authentication.DSL.Interpret.HTTP (runAuthenticationDSL)
 import NN.Client.Authentication.UI as Authentication.UI
 import NN.Client.UI as Client.UI
-import NN.Client.Vertex.DSL (VertexDSL)
 import NN.Client.Vertex.DSL.Interpret.HTTP (runVertexDSLF)
 import NN.Client.Workspace.UI as Workspace.UI
 import NN.Prelude
@@ -41,13 +40,4 @@ interpret
      . BusRW (Tuple VertexID Vertex)
     -> Client.UI.Monad (ajax :: AJAX | eff)
     ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
-interpret vertexBus = foldFree go1
-    where
-    go1 :: Workspace.UI.Monad (ajax :: AJAX | eff) ⊕ Authentication.UI.Monad ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
-    go1 = coproduct onLeft1 runAuthenticationDSL
-
-    onLeft1 :: Workspace.UI.Monad (ajax :: AJAX | eff) ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
-    onLeft1 = foldFree go2
-
-    go2 :: Aff (ajax :: AJAX, avar :: AVAR | eff) ⊕ VertexDSL ~> Aff (ajax :: AJAX, avar :: AVAR | eff)
-    go2 = coproduct id (foldFree (runVertexDSLF vertexBus))
+interpret vertexBus = foldFree (coproduct (foldFree (coproduct id (foldFree (runVertexDSLF vertexBus)))) runAuthenticationDSL)
