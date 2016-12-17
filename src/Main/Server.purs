@@ -34,6 +34,7 @@ import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
 import NN.Server.Vertex.DSL.Interpret.Authorization as Vertex.DSL.Interpret.Authorization
 import NN.Server.Vertex.DSL.Interpret.DB as Vertex.DSL.Interpret.DB
 import NN.Server.Vertex.Web (handleVertexAPI)
+import NN.Server.Web as Web
 import NN.User (UserID(..))
 
 main = launchAff do
@@ -81,15 +82,15 @@ handle db stormpath req =
                         handleVertexAPI (FileID fileID) method path req)
             <#> case _ of
                 Just res -> res
-                Nothing -> error 403
+                Nothing -> Web.forbidden
         "POST", "" : "api" : "v1" : "session" : Nil ->
             case Sexp.fromString (ByteString.toString req.body UTF8) >>= Sexp.fromSexp of
                 Just (username /\ password) -> do
                     account <- Stormpath.authenticateAccount stormpath username password
                     let accountHref = Stormpath.accountHref account
-                    pure $ setCookie "session" accountHref (error 200)
-                Nothing -> pure $ error 400
-        _, _ -> pure $ error 404
+                    pure $ setCookie "session" accountHref (Web.ok unit)
+                Nothing -> pure $ Web.notFound
+        _, _ -> pure $ Web.notFound
 
 static :: ∀ eff. String -> String -> Aff (fs :: FS | eff) Response
 static mime path = do
@@ -98,13 +99,6 @@ static mime path = do
          , headers: Map.singleton (CaseInsensitiveString "content-type") mime
          , body: contents
          }
-
-error :: Int -> Response
-error code =
-    { status: {code, message: ""}
-    , headers: Map.empty :: Map CaseInsensitiveString String
-    , body: ByteString.empty
-    }
 
 runVertexDSLAuthorizationDB
     :: ∀ eff
