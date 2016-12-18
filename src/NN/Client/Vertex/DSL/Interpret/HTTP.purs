@@ -9,7 +9,7 @@ import Control.Monad.Free (foldFree)
 import Network.HTTP.Affjax (AJAX)
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID)
-import NN.Client.Vertex.HTTP (createEdge, createVertex, getVertex)
+import NN.Client.Vertex.HTTP (createEdge, createVertex, getVertex, updateVertex)
 import NN.Client.Vertex.DSL (VertexDSL, VertexDSLF(..))
 
 runVertexDSL
@@ -27,5 +27,7 @@ runVertexDSLF
 runVertexDSLF _ (GetVertex fileID vertexID a) = a <$> getVertex fileID vertexID
 runVertexDSLF vertexBus (VertexBus a) = pure $ a vertexBus
 runVertexDSLF _ (CreateVertex fileID a) = a <$> createVertex fileID
+runVertexDSLF _ (UpdateVertex fileID vertexID vertex a) =
+    a <$ updateVertex fileID vertexID vertex
 runVertexDSLF _ (CreateEdge fileID edge a) = a <$ createEdge fileID edge
 

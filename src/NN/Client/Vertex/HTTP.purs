@@ -1,6 +1,7 @@
 module NN.Client.Vertex.HTTP
 ( getVertex
 , createVertex
+, updateVertex
 , createEdge
 ) where
 
@@ -26,6 +27,17 @@ createVertex (FileID fileID) = do
     case Sexp.fromString response >>= Sexp.fromSexp of
         Just vertexID -> pure vertexID
         Nothing -> liftEff' $ throw "could not create vertex"
+
+updateVertex
+    :: ∀ eff
+     . FileID
+    -> VertexID
+    -> Vertex
+    -> Aff (ajax :: AJAX | eff) Unit
+updateVertex (FileID fileID) (VertexID vertexID) vertex =
+    Affjax.put ("/api/v1/files/" <> fileID <> "/vertices/" <> vertexID)
+               (Sexp.toString (Sexp.toSexp vertex))
+    <#> _.response
 
 createEdge
     :: ∀ eff
