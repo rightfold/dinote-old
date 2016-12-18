@@ -24,4 +24,5 @@ runVertexDSLF
     ~> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff)
 runVertexDSLF conn (GetVertex fileID vertexID next) = next <$> DB.readVertex conn vertexID
 runVertexDSLF conn (CreateVertex fileID next) = next <$> DB.createVertex conn fileID
+runVertexDSLF conn (UpdateVertex fileID vertexID vertex next) = next <$ DB.updateVertex conn fileID vertexID vertex
 runVertexDSLF conn (CreateEdge fileID edge next) = next <$ DB.createEdge conn edge

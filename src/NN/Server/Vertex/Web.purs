@@ -8,7 +8,7 @@ module NN.Server.Vertex.Web
 import Network.HTTP.Message (Request, Response)
 import NN.File (FileID)
 import NN.Prelude
-import NN.Server.Vertex.DSL (createEdge, createVertex, getVertex, VertexDSL)
+import NN.Server.Vertex.DSL (createEdge, createVertex, getVertex, updateVertex, VertexDSL)
 import NN.Server.Web as Web
 import NN.Vertex (VertexID(..))
 
@@ -16,6 +16,7 @@ handleVertexAPI :: FileID -> String -> List String -> Request -> VertexDSL Respo
 handleVertexAPI fileID method path req = case method, path of
     "GET", vertexID : Nil -> handleGetVertex fileID (VertexID vertexID) req
     "POST", Nil -> handleCreateVertex fileID req
+    "PUT", vertexID : Nil -> handleUpdateVertex fileID (VertexID vertexID) req
     "POST", parentID : "children" : childID : Nil ->
         let edge = {parentID: VertexID parentID, childID: VertexID childID}
         in handleCreateEdge fileID edge req
@@ -27,6 +28,10 @@ handleGetVertex fileID vertexID _ =
 
 handleCreateVertex :: FileID -> Request -> VertexDSL Response
 handleCreateVertex fileID _ = createVertex fileID <#> Web.ok
+
+handleUpdateVertex :: FileID -> VertexID -> Request -> VertexDSL Response
+handleUpdateVertex fileID vertexID = Web.interact \vertex ->
+    updateVertex fileID vertexID vertex $> Web.ok unit
 
 handleCreateEdge :: FileID -> {parentID :: VertexID, childID :: VertexID} -> Request -> VertexDSL Response
 handleCreateEdge fileID edge _ = createEdge fileID edge $> Web.ok unit

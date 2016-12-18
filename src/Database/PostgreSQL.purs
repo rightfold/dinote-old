@@ -13,10 +13,12 @@ module Database.PostgreSQL
 , fromSQLValue
 , newPool
 , withConnection
+, withTransaction
 , execute
 , query
 ) where
 
+import Control.Monad.Error.Class (catchError, throwError)
 import Control.Monad.Except (runExcept)
 import Data.Foreign (Foreign, readArray, readString, toForeign)
 import Data.List as List
@@ -116,6 +118,17 @@ foreign import withConnection
      . Pool
     -> (Connection -> Aff (postgreSQL :: POSTGRESQL | eff) a)
     -> Aff (postgreSQL :: POSTGRESQL | eff) a
+
+withTransaction
+    :: ∀ eff a
+     . Connection
+    -> Aff (postgreSQL :: POSTGRESQL | eff) a
+    -> Aff (postgreSQL :: POSTGRESQL | eff) a
+withTransaction conn action =
+    execute conn "BEGIN TRANSACTION" unit
+    *> catchError (Right <$> action) (pure <<< Left) >>= case _ of
+        Right a -> execute conn "COMMIT TRANSACTION" unit $> a
+        Left e -> execute conn "ROLLBACK TRANSACTION" unit *> throwError e
 
 execute
     :: ∀ i eff

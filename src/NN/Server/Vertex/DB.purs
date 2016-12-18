@@ -1,10 +1,11 @@
 module NN.Server.Vertex.DB
 ( readVertex
 , createVertex
+, updateVertex
 , createEdge
 ) where
 
-import Database.PostgreSQL (Connection, execute, POSTGRESQL, query)
+import Database.PostgreSQL (Connection, execute, POSTGRESQL, query, withTransaction)
 import Data.UUID (GENUUID)
 import Data.UUID as UUID
 import NN.File (FileID(..))
@@ -58,6 +59,36 @@ createVertex conn (FileID fileID) = do
         VALUES ($1, '', 'normal', $2)
     """ (vertexIDStr /\ fileID /\ unit)
     pure $ VertexID vertexIDStr
+
+updateVertex
+    :: ∀ eff
+     . Connection
+    -> FileID
+    -> VertexID
+    -> Vertex
+    -> Aff (postgreSQL :: POSTGRESQL | eff) Unit
+updateVertex conn (FileID fileID) (VertexID vertexID) (Vertex note children style) =
+    withTransaction conn do
+        execute conn """
+            DELETE FROM edges
+            WHERE parent_id = $1
+        """ (vertexID /\ unit)
+        for_ children \child ->
+            createEdge conn {parentID: VertexID vertexID, childID: child}
+        execute conn """
+            UPDATE vertices
+            SET
+                note = $2,
+                style = $3
+            WHERE id = $1
+        """ (vertexID /\ note /\ serializeStyle style /\ unit)
+    where
+    serializeStyle Normal = "normal"
+    serializeStyle Dimmed = "dimmed"
+    serializeStyle Grass = "grass"
+    serializeStyle Ocean = "ocean"
+    serializeStyle Peachpuff = "peachpuff"
+    serializeStyle HotdogStand = "hotdog_stand"
 
 createEdge
     :: ∀ eff
