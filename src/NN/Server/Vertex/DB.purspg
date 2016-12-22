@@ -19,7 +19,7 @@ readVertex
     -> VertexID
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Maybe Vertex)
 readVertex conn (VertexID vertexID) = do
-    query conn (Query """
+    query conn [query|
         SELECT
             v.note,
             CASE WHEN count(e.*) = 0 THEN
@@ -27,13 +27,13 @@ readVertex conn (VertexID vertexID) = do
             ELSE
                 array_agg(e.child_id ORDER BY e.index ASC)
             END,
-            v.style
+            v.style :: text
         FROM vertices AS v
         LEFT JOIN edges AS e
             ON e.parent_id = v.id
         WHERE v.id = $1
         GROUP BY v.id
-    """) (vertexID /\ unit)
+    |] (vertexID /\ unit)
     <#> case _ of
         [note /\ children /\ style /\ (_ :: Unit)] ->
             Just $ Vertex note (map VertexID children) (parseStyle style)
