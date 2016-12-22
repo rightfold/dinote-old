@@ -2,7 +2,7 @@ module NN.Server.Session.DB
 ( createSession
 ) where
 
-import Database.PostgreSQL (Connection, POSTGRESQL, query)
+import Database.PostgreSQL (Connection, POSTGRESQL, Query(..), query)
 import NN.Prelude
 import NN.Session (SessionID(..))
 import NN.User (UserID(..))
@@ -15,11 +15,11 @@ createSession
     -> String
     -> Aff (postgreSQL :: POSTGRESQL | eff) SessionID
 createSession conn (UserID userID) description =
-    query conn """
+    query conn [query|
         INSERT INTO sessions (id, user_id, description)
         VALUES (gen_random_uuid(), $1, $2)
-        RETURNING id
-    """ (userID /\ description /\ unit)
+        RETURNING id :: text
+    |] (userID /\ description /\ unit)
     <#> case _ of
         [sessionID /\ (_ :: Unit)] -> SessionID sessionID
         _ -> unsafeCrashWith "createSession"

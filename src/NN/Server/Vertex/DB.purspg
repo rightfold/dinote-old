@@ -5,7 +5,7 @@ module NN.Server.Vertex.DB
 , createEdge
 ) where
 
-import Database.PostgreSQL (Connection, execute, POSTGRESQL, query, withTransaction)
+import Database.PostgreSQL (Connection, execute, POSTGRESQL, Query(..), query, withTransaction)
 import Data.UUID (GENUUID)
 import Data.UUID as UUID
 import NN.File (FileID(..))
@@ -19,7 +19,7 @@ readVertex
     -> VertexID
     -> Aff (postgreSQL :: POSTGRESQL | eff) (Maybe Vertex)
 readVertex conn (VertexID vertexID) = do
-    query conn """
+    query conn (Query """
         SELECT
             v.note,
             CASE WHEN count(e.*) = 0 THEN
@@ -33,7 +33,7 @@ readVertex conn (VertexID vertexID) = do
             ON e.parent_id = v.id
         WHERE v.id = $1
         GROUP BY v.id
-    """ (vertexID /\ unit)
+    """) (vertexID /\ unit)
     <#> case _ of
         [note /\ children /\ style /\ (_ :: Unit)] ->
             Just $ Vertex note (map VertexID children) (parseStyle style)
@@ -54,10 +54,10 @@ createVertex
     -> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff) VertexID
 createVertex conn (FileID fileID) = do
     vertexIDStr <- liftEff $ show <$> UUID.genUUID
-    execute conn """
+    execute conn [query|
         INSERT INTO vertices (id, note, style, file_id)
         VALUES ($1, '', 'normal', $2)
-    """ (vertexIDStr /\ fileID /\ unit)
+    |] (vertexIDStr /\ fileID /\ unit)
     pure $ VertexID vertexIDStr
 
 updateVertex
@@ -69,19 +69,19 @@ updateVertex
     -> Aff (postgreSQL :: POSTGRESQL | eff) Unit
 updateVertex conn (FileID fileID) (VertexID vertexID) (Vertex note children style) =
     withTransaction conn do
-        execute conn """
+        execute conn [query|
             DELETE FROM edges
             WHERE parent_id = $1
-        """ (vertexID /\ unit)
+        |] (vertexID /\ unit)
         for_ children \child ->
             createEdge conn {parentID: VertexID vertexID, childID: child}
-        execute conn """
+        execute conn [query|
             UPDATE vertices
             SET
                 note = $2,
-                style = $3
+                style = $3 :: text
             WHERE id = $1
-        """ (vertexID /\ note /\ serializeStyle style /\ unit)
+        |] (vertexID /\ note /\ serializeStyle style /\ unit)
     where
     serializeStyle Normal = "normal"
     serializeStyle Dimmed = "dimmed"
@@ -96,9 +96,9 @@ createEdge
     -> {parentID :: VertexID, childID :: VertexID}
     -> Aff (postgreSQL :: POSTGRESQL | eff) Unit
 createEdge conn {parentID: VertexID parentID, childID: VertexID childID} =
-    execute conn """
+    execute conn [query|
         INSERT INTO edges (parent_id, child_id, index)
         SELECT $1, $2, coalesce(max(index) + 1, 0)
         FROM edges
         WHERE parent_id = $1
-    """ (parentID /\ childID /\ unit)
+    |] (parentID /\ childID /\ unit)

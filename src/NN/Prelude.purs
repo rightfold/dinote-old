@@ -16,6 +16,8 @@ module NN.Prelude
 , module Prelude
 , type (⊕)
 , type (+)
+, type (×)
+, UUID
 , liftEff'
 ) where
 
@@ -39,6 +41,9 @@ import Prelude
 
 infixr 6 type Coproduct as ⊕
 infixr 6 type Either as +
+infixr 7 type Tuple as ×
+
+type UUID = String
 
 liftEff' :: ∀ a eff. Eff (err :: EXCEPTION | eff) a -> Aff eff a
 liftEff' = liftEff <<< unsafeCoerceEff

@@ -7,7 +7,7 @@ import Control.Monad.Maybe.Trans (MaybeT)
 import Control.Monad.Reader.Class as Reader
 import Control.Monad.Reader.Trans (ReaderT)
 import Control.Plus as Plus
-import Database.PostgreSQL (Connection, POSTGRESQL, query)
+import Database.PostgreSQL (Connection, POSTGRESQL, Query(..), query)
 import NN.File (FileID(..))
 import NN.Prelude
 import NN.Server.Authorization.DSL (AuthorizationDSL, AuthorizationDSLF(..))
@@ -27,13 +27,13 @@ runAuthorizationDSL conn = foldFree go
         Reader.ask >>= case _ of
             Nothing -> Plus.empty
             Just (UserID userID) ->
-                liftAff (query conn """
+                liftAff (query conn [query|
                     SELECT
                     FROM files
                     WHERE
                             id = $1
                         AND author_id = $2
-                """ (fileID /\ userID /\ unit))
+                |] (fileID /\ userID /\ unit))
                 >>= case _ of
                     [(_ :: Unit)] -> pure next
                     _ -> Plus.empty

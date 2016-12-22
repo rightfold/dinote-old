@@ -3,3 +3,7 @@
 /bower_components
 /node_modules
 /output
+
+/src/NN/Server/Authorization/DSL/Interpret/DB.purs
+/src/NN/Server/Session/DB.purs
+/src/NN/Server/Vertex/DB.purs
