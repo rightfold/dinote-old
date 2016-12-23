@@ -1,4 +1,4 @@
-BEGIN;
+BEGIN TRANSACTION;
 
 WITH RECURSIVE reachable(id) AS (
     SELECT root_id
@@ -14,4 +14,4 @@ WITH RECURSIVE reachable(id) AS (
 DELETE FROM vertices
 WHERE id NOT IN (TABLE reachable);
 
-COMMIT;
+COMMIT TRANSACTION;
