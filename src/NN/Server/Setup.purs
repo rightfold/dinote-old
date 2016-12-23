@@ -52,7 +52,7 @@ setupDB conn = do
         CREATE TABLE IF NOT EXISTS vertices (
             id          uuid        NOT NULL,
             note        text        NOT NULL,
-            style       char(20)    NOT NULL,
+            style       "char"      NOT NULL,
             file_id     uuid        NOT NULL,
             PRIMARY KEY (id),
             FOREIGN KEY (file_id)

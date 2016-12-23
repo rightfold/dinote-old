@@ -27,7 +27,7 @@ readVertex conn (VertexID vertexID) = do
             ELSE
                 array_agg(e.child_id ORDER BY e.index ASC)
             END,
-            v.style :: text
+            v.style
         FROM vertices AS v
         LEFT JOIN edges AS e
             ON e.parent_id = v.id
@@ -39,12 +39,12 @@ readVertex conn (VertexID vertexID) = do
             Just $ Vertex note (map VertexID children) (parseStyle style)
         _ -> Nothing
     where
-    parseStyle "normal              " = Normal
-    parseStyle "dimmed              " = Dimmed
-    parseStyle "grass               " = Grass
-    parseStyle "ocean               " = Ocean
-    parseStyle "peachpuff           " = Peachpuff
-    parseStyle "hotdog_stand        " = HotdogStand
+    parseStyle 'N' = Normal
+    parseStyle 'D' = Dimmed
+    parseStyle 'G' = Grass
+    parseStyle 'O' = Ocean
+    parseStyle 'P' = Peachpuff
+    parseStyle 'H' = HotdogStand
     parseStyle _ = Normal
 
 createVertex
@@ -79,16 +79,16 @@ updateVertex conn (FileID fileID) (VertexID vertexID) (Vertex note children styl
             UPDATE vertices
             SET
                 note = $2,
-                style = $3 :: text
+                style = $3
             WHERE id = $1
         |] (vertexID /\ note /\ serializeStyle style /\ unit)
     where
-    serializeStyle Normal = "normal"
-    serializeStyle Dimmed = "dimmed"
-    serializeStyle Grass = "grass"
-    serializeStyle Ocean = "ocean"
-    serializeStyle Peachpuff = "peachpuff"
-    serializeStyle HotdogStand = "hotdog_stand"
+    serializeStyle Normal      = 'N'
+    serializeStyle Dimmed      = 'D'
+    serializeStyle Grass       = 'G'
+    serializeStyle Ocean       = 'O'
+    serializeStyle Peachpuff   = 'P'
+    serializeStyle HotdogStand = 'H'
 
 createEdge
     :: ∀ eff

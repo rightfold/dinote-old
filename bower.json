@@ -36,6 +36,6 @@
     "purescript-node-process": "^3.0.0",
     "purescript-generics-rep": "^4.0.0",
     "purescript-const": "^2.0.0",
-    "purescript-postgresql-client": "^0.0.3"
+    "purescript-postgresql-client": "^0.0.4"
   }
 }
