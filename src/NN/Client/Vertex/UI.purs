@@ -54,7 +54,7 @@ mLiftVertexDSL :: ∀ eff. VertexDSL ~> Monad eff
 mLiftVertexDSL = liftF <<< right
 
 ui :: ∀ eff. FileID -> VertexID -> Set VertexID -> Component HTML Query Output (Monad eff)
-ui fileID vertexID parentIDs =
+ui fileID vertexID transitiveParentIDs =
     lifecycleParentComponent {initialState, render, eval, initializer, finalizer}
     where
     initialState :: State
@@ -112,7 +112,7 @@ ui fileID vertexID parentIDs =
 
     renderChild :: Slot -> VertexID -> Array (ParentHTML Query Query Slot (Monad eff))
     renderChild slot childID =
-        let childComponent = defer \_ -> ui fileID childID (Set.insert vertexID parentIDs)
+        let childComponent = defer \_ -> ui fileID childID (Set.insert vertexID transitiveParentIDs)
         in [H.slot slot childComponent absurd]
 
     eval :: Query ~> ParentDSL State Query Query Slot Output (Monad eff)
@@ -152,7 +152,7 @@ ui fileID vertexID parentIDs =
     finalizer = Nothing
 
     isCycle :: Boolean
-    isCycle = Set.member vertexID parentIDs
+    isCycle = Set.member vertexID transitiveParentIDs
 
 styleClass :: Style -> ClassName
 styleClass Normal = ClassName "-style-normal"
