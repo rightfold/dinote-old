@@ -31,13 +31,13 @@ type State = Maybe Vertex
 
 data Query a
     = Initialize a
-    | UpdateVertex Vertex a
+    | ReplaceVertex Vertex a
     | ModifyVertex (Vertex -> Vertex) a
     | AddNewVertex a
 
 instance functorQuery :: Functor Query where
     map f (Initialize next) = Initialize (f next)
-    map f (UpdateVertex vertex next) = UpdateVertex vertex (f next)
+    map f (ReplaceVertex vertex next) = ReplaceVertex vertex (f next)
     map f (ModifyVertex func next) = ModifyVertex func (f next)
     map f (AddNewVertex next) = AddNewVertex (f next)
 
@@ -125,8 +125,8 @@ ui fileID vertexID transitiveParentIDs =
             bus <- lift $ mLiftVertexDSL $ vertexBus
             hoistM mLiftAff $ subscribe $ busEvents bus \(Tuple vertexID' vertex) ->
                 guard (vertexID' == vertexID)
-                $> (Listening <$ action (UpdateVertex vertex))
-    eval (UpdateVertex vertex next) = next <$ State.put (Just vertex)
+                $> (Listening <$ action (ReplaceVertex vertex))
+    eval (ReplaceVertex vertex next) = next <$ State.put (Just vertex)
     eval (ModifyVertex func next) = do
         State.get >>= case _ of
             Nothing -> pure unit
