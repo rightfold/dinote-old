@@ -110,6 +110,11 @@ createEdge conn (FileID fileID) {parentID: VertexID parentID, childID: VertexID 
         FROM edges AS e
         WHERE
                 e.parent_id = $2
-            AND (SELECT v.file_id = $1 FROM vertices AS v WHERE v.id = $2)
-            AND (SELECT v.file_id = $1 FROM vertices AS v WHERE v.id = $3)
+            AND (
+                SELECT
+                        every(v.file_id = $1)
+                    AND count(v.*) = 2
+                FROM vertices AS v
+                WHERE v.id IN ($2, $3)
+            )
     |] (fileID /\ parentID /\ childID /\ unit)
