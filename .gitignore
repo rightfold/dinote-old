@@ -4,6 +4,8 @@
 /node_modules
 /output
 
+# BEGIN PURSPGPP OUTPUT
 /src/NN/Server/Authorization/DSL/Interpret/DB.purs
 /src/NN/Server/Session/DB.purs
 /src/NN/Server/Vertex/DB.purs
+# END PURSPGPP OUTPUT

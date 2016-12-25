@@ -7,7 +7,11 @@ constant PURSPGPP = "bower_components/purescript-postgresql-client/purspgpp";
 
 sub purspgpp(Str:D $connection-string) {
     use fatal;
-    for ".gitignore".IO.lines.grep(/'.purs'$/).map(($*CWD ~ *).IO) -> $out {
+    for
+        ".gitignore".IO.lines
+        .grep({"# BEGIN PURSPGPP OUTPUT" ^ff^ "# END PURSPGPP OUTPUT"})
+        .map(($*CWD ~ *).IO)
+    -> $out {
         my $in = $out.subst(/'.purs'$/, ".purspg").IO;
         run PERL6, PURSPGPP, $connection-string, $in, $out;
     }
