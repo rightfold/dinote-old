@@ -1,0 +1,26 @@
+#!/usr/bin/env perl6
+use v6;
+
+constant PULP = $*DISTRO.is-win ?? "pulp.cmd" !! "pulp";
+constant PERL6 = $*DISTRO.is-win ?? "perl6.bat" !! "perl6";
+constant PURSPGPP = "bower_components/purescript-postgresql-client/purspgpp";
+
+sub purspgpp(Str:D $connection-string) {
+    use fatal;
+    for ".gitignore".IO.lines.grep(/'.purs'$/).map(($*CWD ~ *).IO) -> $out {
+        my $in = $out.subst(/'.purs'$/, ".purspg").IO;
+        run PERL6, PURSPGPP, $connection-string, $in, $out;
+    }
+}
+
+sub browserify {
+    use fatal;
+    mkdir "output";
+    my $out-js = open("output/nn.js", :w, :bin);
+    run PULP, "browserify", "--main", "Main.Client", :out($out-js);
+}
+
+sub MAIN(Str:D $connection-string) {
+    purspgpp($connection-string);
+    browserify;
+}
