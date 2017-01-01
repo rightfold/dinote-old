@@ -117,4 +117,5 @@ createEdge conn (FileID fileID) {parentID: VertexID parentID, childID: VertexID 
                 FROM vertices AS v
                 WHERE v.id IN ($2, $3)
             )
+        LIMIT 1
     |] (fileID /\ parentID /\ childID /\ unit)
