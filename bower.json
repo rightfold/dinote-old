@@ -37,5 +37,8 @@
     "purescript-generics-rep": "^4.0.0",
     "purescript-const": "^2.0.0",
     "purescript-postgresql-client": "^0.0.4"
+  },
+  "devDependencies": {
+    "purescript-test-unit": "^10.0.1"
   }
 }

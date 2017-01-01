@@ -24,7 +24,8 @@ sub browserify {
     run PULP, "browserify", "--main", "Main.Client", :out($out-js);
 }
 
-sub MAIN(Str:D $connection-string) {
-    purspgpp($connection-string);
+sub MAIN {
+    my $connection-string = %*ENV<NN_BUILD_CONNECTION_STRING>;
+    purspgpp $connection-string;
     browserify;
 }

@@ -1,0 +1,35 @@
+#!/usr/bin/env perl6
+use v6;
+
+constant PULP = $*DISTRO.is-win ?? "pulp.cmd" !! "pulp";
+constant PERL6 = $*DISTRO.is-win ?? "perl6.bat" !! "perl6";
+
+sub build {
+    run PERL6, "tools/build";
+}
+
+sub unit-test {
+    run PULP, "test", "--test-path", "unit-test", "tap";
+}
+
+sub integration-test {
+    run PERL6, $_ for dirr("integration-test", test => /".t"$/);
+}
+
+sub MAIN {
+    build;
+    unit-test;
+    integration-test;
+}
+
+sub dirr(IO(Cool) $dir, Mu :$test = none(".", "..")) {
+    gather {
+        my @todo = $dir,;
+        while @todo {
+            for @todo.pop.dir {
+                take $_ if $_ ~~ $test;
+                @todo.push: $_ if .d;
+            }
+        }
+    }
+}
