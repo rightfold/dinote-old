@@ -90,3 +90,7 @@ setupDB conn = do
             ON edges
             (child_id)
     """) unit
+
+    execute conn (Query """
+        CREATE SEQUENCE IF NOT EXISTS edge_index
+    """) unit
