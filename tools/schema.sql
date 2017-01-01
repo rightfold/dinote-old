@@ -3,7 +3,7 @@ BEGIN;
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS sessions (
-    id              uuid        NOT NULL,
+    id              bytea       NOT NULL,
     user_id         text        NOT NULL,
     description     text        NOT NULL,
     PRIMARY KEY (id)

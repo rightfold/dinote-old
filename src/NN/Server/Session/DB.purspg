@@ -17,7 +17,7 @@ createSession
 createSession conn (UserID userID) description =
     query conn [query|
         INSERT INTO sessions (id, user_id, description)
-        VALUES (gen_random_uuid(), $1, $2)
+        VALUES (gen_random_bytes(64), $1, $2)
         RETURNING id :: text
     |] (userID /\ description /\ unit)
     <#> case _ of
