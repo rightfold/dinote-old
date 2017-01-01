@@ -28,7 +28,6 @@ import NN.Prelude
 import NN.Server.Authentication.DSL.Interpret.Stormpath (runAuthenticationDSL)
 import NN.Server.Authentication.Web (handleAuthenticationAPI)
 import NN.Server.Authorization.DSL.Interpret.DB (runAuthorizationDSL)
-import NN.Server.Setup (setupDB)
 import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
 import NN.Server.Vertex.DSL.Interpret.Authorization as Vertex.DSL.Interpret.Authorization
 import NN.Server.Vertex.DSL.Interpret.DB as Vertex.DSL.Interpret.DB
@@ -56,8 +55,6 @@ main = launchAff do
                   , max: 10
                   , idleTimeoutMillis: 0
                   }
-
-    withConnection db setupDB
 
     liftEff do
         server <- createServer $ nodeHandler $ handle db stormpath
