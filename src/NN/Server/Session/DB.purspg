@@ -1,20 +1,36 @@
 module NN.Server.Session.DB
-( createSession
+( readSession
+, createSession
 ) where
 
 import Database.PostgreSQL (Connection, POSTGRESQL, Query(..), query)
 import NN.Prelude
-import NN.Session (SessionID(..))
+import NN.Session (Session(..), SessionID(..))
 import NN.User (UserID(..))
 import Partial.Unsafe (unsafeCrashWith)
+
+readSession
+    :: ∀ eff
+     . Connection
+    -> SessionID
+    -> Aff (postgreSQL :: POSTGRESQL | eff) (Maybe Session)
+readSession conn (SessionID sessionID) =
+    query conn [query|
+        SELECT user_id, description
+        FROM sessions
+        WHERE id = $1 :: text :: bytea
+    |] (sessionID /\ unit)
+    <#> case _ of
+        [userID /\ description /\ (_ :: Unit)] ->
+            Just $ Session (UserID userID) description
+        _ -> Nothing
 
 createSession
     :: ∀ eff
      . Connection
-    -> UserID
-    -> String
+    -> Session
     -> Aff (postgreSQL :: POSTGRESQL | eff) SessionID
-createSession conn (UserID userID) description =
+createSession conn (Session (UserID userID) description) =
     query conn [query|
         INSERT INTO sessions (id, user_id, description)
         VALUES (gen_random_bytes(64), $1, $2)

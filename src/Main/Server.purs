@@ -8,6 +8,7 @@ import Control.Monad.Maybe.Trans (MaybeT, runMaybeT)
 import Control.Monad.Reader.Trans (runReaderT)
 import Control.Monad.Trans.Class (lift)
 import Data.ByteString as ByteString
+import Data.Lens ((^.))
 import Data.List as List
 import Data.Map as Map
 import Data.String as String
@@ -25,15 +26,17 @@ import Node.HTTP (createServer, listen)
 import Node.Process (exit, lookupEnv)
 import NN.File (FileID(..))
 import NN.Prelude
-import NN.Server.Authentication.DSL.Interpret.Stormpath (runAuthenticationDSL)
+import NN.Server.Authentication.DSL.Interpret.DB (runAuthenticationDSL)
 import NN.Server.Authentication.Web (handleAuthenticationAPI)
 import NN.Server.Authorization.DSL.Interpret.DB (runAuthorizationDSL)
+import NN.Server.Session.DB (readSession)
 import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
 import NN.Server.Vertex.DSL.Interpret.Authorization as Vertex.DSL.Interpret.Authorization
 import NN.Server.Vertex.DSL.Interpret.DB as Vertex.DSL.Interpret.DB
 import NN.Server.Vertex.Web (handleVertexAPI)
 import NN.Server.Web as Web
-import NN.User (UserID(..))
+import NN.Session (SessionID(..), sessionUserID)
+import NN.User (UserID)
 
 main = launchAff do
     stormpath <- do
@@ -72,15 +75,20 @@ handle db stormpath req =
         "GET",  "" : "output" : "nn.js" : Nil                                   -> static "application/javascript" "output/nn.js"
         "GET",  "" : "output" : "nn.css" : Nil                                  -> static "text/css" "output/nn.css"
         method, "" : "api" : "v1" : "files" : fileID : "vertices" : path ->
-            withConnection db (\conn ->
+            withConnection db (\conn -> do
+                userID <- case SessionID <$> getCookie "session" req of
+                    Nothing -> pure Nothing
+                    Just sessionID -> readSession conn sessionID <#> map (_ ^. sessionUserID)
                 runMaybeT $
-                    runVertexDSLAuthorizationDB conn (UserID <$> getCookie "session" req) $
+                    runVertexDSLAuthorizationDB conn userID $
                         handleVertexAPI (FileID fileID) method path req)
             <#> case _ of
                 Just res -> res
                 Nothing -> Web.forbidden
         method, "" : "api" : "v1" : "session" : path ->
-            runAuthenticationDSL stormpath $ handleAuthenticationAPI method path req
+            withConnection db \conn ->
+                runAuthenticationDSL conn stormpath $
+                    handleAuthenticationAPI method path req
         _, _ -> pure $ Web.notFound
 
 static :: ∀ eff. String -> String -> Aff (fs :: FS | eff) Response
