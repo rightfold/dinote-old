@@ -4,6 +4,7 @@ use v6;
 constant PULP = $*DISTRO.is-win ?? "pulp.cmd" !! "pulp";
 constant PERL6 = $*DISTRO.is-win ?? "perl6.bat" !! "perl6";
 constant PURSPGPP = "bower_components/purescript-postgresql-client/purspgpp";
+constant SCSS = $*DISTRO.is-win ?? "scss.bat" !! "scss";
 
 sub purspgpp(Str:D $connection-string) {
     use fatal;
@@ -24,8 +25,15 @@ sub browserify {
     run PULP, "browserify", "--main", "Main.Client", :out($out-js);
 }
 
+sub scss {
+    use fatal;
+    mkdir "output";
+    run SCSS, "css/main.scss", "output/nn.css";
+}
+
 sub MAIN {
     my $connection-string = %*ENV<NN_BUILD_CONNECTION_STRING>;
     purspgpp $connection-string;
     browserify;
+    scss;
 }
