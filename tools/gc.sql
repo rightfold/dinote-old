@@ -1,3 +1,11 @@
+/**
+ * This program deletes vertices that can no longer be accessed, because they
+ * are not (indirectly) referenced by a root vertex. The implementation is a
+ * simple mark-and-sweep algorithm.
+ *
+ * This program should be run periodically.
+ */
+
 BEGIN TRANSACTION;
 
 WITH RECURSIVE reachable(id) AS (
