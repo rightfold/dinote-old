@@ -6,8 +6,6 @@
  * This program should be run periodically.
  */
 
-BEGIN TRANSACTION;
-
 WITH RECURSIVE reachable(id) AS (
     SELECT root_id
     FROM files
@@ -22,4 +20,5 @@ WITH RECURSIVE reachable(id) AS (
 DELETE FROM vertices
 WHERE id NOT IN (TABLE reachable);
 
-COMMIT TRANSACTION;
+VACUUM ANALYZE edges;
+VACUUM ANALYZE vertices;
