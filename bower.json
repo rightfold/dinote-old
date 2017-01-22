@@ -14,7 +14,6 @@
     "purescript-tuples": "^3.0.0",
     "purescript-sets": "^2.0.0",
     "purescript-transformers": "^2.0.2",
-    "purescript-lazy": "^2.0.0",
     "purescript-debug": "^2.0.0",
     "purescript-maps": "^2.0.1",
     "purescript-affjax": "^3.0.1",
