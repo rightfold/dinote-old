@@ -1,5 +1,6 @@
 module NN.Client.Workspace.UI
 ( Query
+, Input
 , Output
 , Monad
 , ui
@@ -8,7 +9,6 @@ module NN.Client.Workspace.UI
 import Control.Monad.Aff.AVar (AVAR)
 import Control.Monad.Free (Free)
 import Control.Monad.State.Class as State
-import Data.Lazy (defer)
 import Data.List as List
 import Data.Map (Map)
 import Data.Map as Map
@@ -30,17 +30,19 @@ type State =
 data Query a
     = SelectFile FileID a
 
+type Input = Unit
+
 type Output = Void
 
 type Slot = VertexID
 
 type Monad eff = Free (Aff (avar :: AVAR | eff) ⊕ VertexDSL)
 
-ui :: ∀ eff. Component HTML Query Output (Monad eff)
-ui = parentComponent {initialState, render, eval}
+ui :: ∀ eff. Component HTML Query Input Output (Monad eff)
+ui = parentComponent {initialState, render, eval, handleInput: const Nothing}
     where
-    initialState :: State
-    initialState =
+    initialState :: Input -> State
+    initialState _ =
         { files:
             Map.empty
             # Map.insert (FileID "ab77b629-06b1-4c2e-a1e2-11ec36d778e8") (File "A" (VertexID "d7b77961-4b36-4d76-b1b0-db4851c9fdae"))
@@ -70,7 +72,7 @@ ui = parentComponent {initialState, render, eval}
         case selectedFileID >>= \fileID -> (fileID /\ _) <$> Map.lookup fileID files of
             Nothing -> [H.text "Select a file!"]
             Just (fileID /\ File _ vertexID) ->
-                [H.slot vertexID (defer \_ -> Vertex.UI.ui fileID vertexID Set.empty) absurd]
+                [H.slot vertexID (Vertex.UI.ui fileID vertexID Set.empty) unit absurd]
 
     eval :: Query ~> ParentDSL State Query Vertex.UI.Query Slot Output (Monad eff)
     eval (SelectFile fileID next) =

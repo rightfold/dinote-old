@@ -10,9 +10,9 @@ import Control.Monad.Aff.Bus as Bus
 import Control.Monad.Free (foldFree)
 import Control.Monad.Rec.Class (forever)
 import Data.Functor.Coproduct (coproduct)
+import Halogen.Aff (HalogenEffects)
 import Halogen.Aff.Util (awaitBody, runHalogenAff)
 import Halogen.Component as Halogen.Component
-import Halogen.Effects (HalogenEffects)
 import Halogen.VirtualDOM.Driver (runUI)
 import Network.HTTP.Affjax (AJAX)
 import NN.Client.Authentication.DSL.Interpret.HTTP (runAuthenticationDSL)
@@ -31,7 +31,7 @@ main' = do
         Tuple vertexID vertex <- Bus.read vertexBus
         traceAnyA vertexID
         traceAnyA vertex
-    awaitBody >>= runUI (Halogen.Component.hoist (interpret vertexBus) Client.UI.ui) # void
+    awaitBody >>= runUI (Halogen.Component.hoist (interpret vertexBus) Client.UI.ui) unit >>> void
 
 interpret
     :: ∀ eff

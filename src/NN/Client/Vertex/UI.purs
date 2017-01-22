@@ -1,5 +1,6 @@
 module NN.Client.Vertex.UI
 ( Query
+, Input
 , Output
 , Monad
 , ui
@@ -12,7 +13,6 @@ import Control.Monad.State.Class as State
 import Control.Monad.Trans.Class (lift)
 import Control.MonadZero (guard)
 import Data.Functor.Coproduct (left, right)
-import Data.Lazy (defer)
 import Data.Lens ((.~), (<>~))
 import Data.List as List
 import Data.Set (Set)
@@ -41,6 +41,8 @@ instance functorQuery :: Functor Query where
     map f (ModifyVertex func next) = ModifyVertex func (f next)
     map f (AddNewVertex next) = AddNewVertex (f next)
 
+type Input = Unit
+
 type Output = Void
 
 type Slot = Int
@@ -53,12 +55,12 @@ mLiftAff = liftF <<< left
 mLiftVertexDSL :: ∀ eff. VertexDSL ~> Monad eff
 mLiftVertexDSL = liftF <<< right
 
-ui :: ∀ eff. FileID -> VertexID -> Set VertexID -> Component HTML Query Output (Monad eff)
+ui :: ∀ eff. FileID -> VertexID -> Set VertexID -> Component HTML Query Input Output (Monad eff)
 ui fileID vertexID transitiveParentIDs =
-    lifecycleParentComponent {initialState, render, eval, initializer, finalizer}
+    lifecycleParentComponent {initialState, render, eval, handleInput: const Nothing, initializer, finalizer}
     where
-    initialState :: State
-    initialState = Nothing
+    initialState :: Input -> State
+    initialState _ = Nothing
 
     render :: State -> ParentHTML Query Query Slot (Monad eff)
     render state
@@ -112,8 +114,8 @@ ui fileID vertexID transitiveParentIDs =
 
     renderChild :: Slot -> VertexID -> Array (ParentHTML Query Query Slot (Monad eff))
     renderChild slot childID =
-        let childComponent = defer \_ -> ui fileID childID (Set.insert vertexID transitiveParentIDs)
-        in [H.slot slot childComponent absurd]
+        let childComponent = ui fileID childID (Set.insert vertexID transitiveParentIDs)
+        in [H.slot slot childComponent unit absurd]
 
     eval :: Query ~> ParentDSL State Query Query Slot Output (Monad eff)
     eval (Initialize next)

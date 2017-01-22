@@ -1,5 +1,6 @@
 module NN.Client.Authentication.UI
 ( Query
+, Input
 , Output(..)
 , Monad
 , ui
@@ -24,15 +25,17 @@ data Query a
     = Alter (State -> State) a
     | Submit a
 
+type Input = Unit
+
 newtype Output = SignedIn UserID
 
 type Monad = AuthenticationDSL
 
-ui :: Component HTML Query Output Monad
-ui = component {initialState, render, eval}
+ui :: Component HTML Query Input Output Monad
+ui = component {initialState, render, eval, handleInput: const Nothing}
     where
-    initialState :: State
-    initialState = {username: "", password: Password ""}
+    initialState :: Input -> State
+    initialState _ = {username: "", password: Password ""}
 
     render :: State -> ComponentHTML Query
     render {username, password: Password password} =
