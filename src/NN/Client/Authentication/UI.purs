@@ -32,7 +32,7 @@ newtype Output = SignedIn UserID
 type Monad = AuthenticationDSL
 
 ui :: Component HTML Query Input Output Monad
-ui = component {initialState, render, eval, handleInput: const Nothing}
+ui = component {initialState, render, eval, receiver: const Nothing}
     where
     initialState :: Input -> State
     initialState _ = {username: "", password: Password ""}
@@ -40,13 +40,13 @@ ui = component {initialState, render, eval, handleInput: const Nothing}
     render :: State -> ComponentHTML Query
     render {username, password: Password password} =
         H.div []
-            [ H.input [ P.inputType P.InputEmail
+            [ H.input [ P.type_ P.InputEmail
                       , E.onValueChange (E.input \s -> Alter _ { username = s })
                       ]
-            , H.input [ P.inputType P.InputPassword
+            , H.input [ P.type_ P.InputPassword
                       , E.onValueChange (E.input \s -> Alter _ { password = Password s })
                       ]
-            , H.button [ P.buttonType P.ButtonSubmit
+            , H.button [ P.type_ P.ButtonSubmit
                        , E.onClick (E.input_ Submit)
                        ]
                 [H.text "Sign In"]

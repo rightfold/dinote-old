@@ -57,7 +57,7 @@ mLiftVertexDSL = liftF <<< right
 
 ui :: ∀ eff. FileID -> VertexID -> Set VertexID -> Component HTML Query Input Output (Monad eff)
 ui fileID vertexID transitiveParentIDs =
-    lifecycleParentComponent {initialState, render, eval, handleInput: const Nothing, initializer, finalizer}
+    lifecycleParentComponent {initialState, render, eval, receiver: const Nothing, initializer, finalizer}
     where
     initialState :: Input -> State
     initialState _ = Nothing
@@ -125,7 +125,7 @@ ui fileID vertexID transitiveParentIDs =
         immediate = State.put =<< lift (mLiftVertexDSL $ getVertex fileID vertexID)
         subsequent = do
             bus <- lift $ mLiftVertexDSL $ vertexBus
-            hoistM mLiftAff $ subscribe $ busEvents bus \(Tuple vertexID' vertex) ->
+            hoist mLiftAff $ subscribe $ busEvents bus \(Tuple vertexID' vertex) ->
                 guard (vertexID' == vertexID)
                 $> (Listening <$ action (ReplaceVertex vertex))
     eval (ReplaceVertex vertex next) = next <$ State.put (Just vertex)

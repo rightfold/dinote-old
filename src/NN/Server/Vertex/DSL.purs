@@ -2,6 +2,7 @@ module NN.Server.Vertex.DSL
 ( VertexDSL
 , VertexDSLF(..)
 , getVertex
+, getVertices
 , createVertex
 , updateVertex
 , createEdge
@@ -16,12 +17,16 @@ type VertexDSL = Free VertexDSLF
 
 data VertexDSLF a
     = GetVertex FileID VertexID (Maybe Vertex -> a)
+    | GetVertices (List (FileID × VertexID)) (List ((FileID × VertexID) × Vertex) -> a)
     | CreateVertex FileID (VertexID -> a)
     | UpdateVertex FileID VertexID Vertex a
     | CreateEdge FileID {parentID :: VertexID, childID :: VertexID} a
 
 getVertex :: FileID -> VertexID -> VertexDSL (Maybe Vertex)
 getVertex fileID vertexID = liftF $ GetVertex fileID vertexID id
+
+getVertices :: List (FileID × VertexID) -> VertexDSL (List ((FileID × VertexID) × Vertex))
+getVertices ids = liftF $ GetVertices ids id
 
 createVertex :: FileID -> VertexDSL VertexID
 createVertex fileID = liftF $ CreateVertex fileID id

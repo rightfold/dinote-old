@@ -1,7 +1,7 @@
 {
   "name": "nodenote",
   "dependencies": {
-    "purescript-halogen": "https://github.com/garyb/purescript-halogen.git#props",
+    "purescript-halogen": "https://github.com/slamdata/purescript-halogen.git#master",
     "purescript-prelude": "^2.1.0",
     "purescript-eff": "^2.0.0",
     "purescript-aff": "^2.0.1",
@@ -35,7 +35,10 @@
     "purescript-node-process": "^3.0.0",
     "purescript-generics-rep": "^4.0.0",
     "purescript-const": "^2.0.0",
-    "purescript-postgresql-client": "^0.0.14"
+    "purescript-postgresql-client": "^0.0.14",
+    "purescript-skull": "^0.0.11",
+    "purescript-datetime": "^2.0.0",
+    "purescript-refs": "^2.0.0"
   },
   "devDependencies": {
     "purescript-test-unit": "^10.0.1"

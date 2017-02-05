@@ -33,7 +33,7 @@ import NN.Server.Session.DB (readSession)
 import NN.Server.Vertex.DSL (VertexDSL, VertexDSLF)
 import NN.Server.Vertex.DSL.Interpret.Authorization as Vertex.DSL.Interpret.Authorization
 import NN.Server.Vertex.DSL.Interpret.DB as Vertex.DSL.Interpret.DB
-import NN.Server.Vertex.Web (handleVertexAPI)
+import NN.Server.Vertex.Web (handleVertexAPI, handleVertexBatchAPI)
 import NN.Server.Web as Web
 import NN.Session (SessionID(..), sessionUserID)
 import NN.User (UserID)
@@ -74,6 +74,17 @@ handle db stormpath req =
         "GET",  "" : "" : Nil                                                   -> static "text/html" "index.html"
         "GET",  "" : "output" : "nn.js" : Nil                                   -> static "application/javascript" "output/nn.js"
         "GET",  "" : "output" : "nn.css" : Nil                                  -> static "text/css" "output/nn.css"
+        method,  "" : "api" : "v1" : "files" : "batch" : path ->
+            withConnection db (\conn -> do
+                userID <- case SessionID <$> getCookie "session" req of
+                    Nothing -> pure Nothing
+                    Just sessionID -> readSession conn sessionID <#> map (_ ^. sessionUserID)
+                runMaybeT $
+                    runVertexDSLAuthorizationDB conn userID $
+                        handleVertexBatchAPI method path req)
+            <#> case _ of
+                Just res -> res
+                Nothing -> Web.forbidden
         method, "" : "api" : "v1" : "files" : fileID : "vertices" : path ->
             withConnection db (\conn -> do
                 userID <- case SessionID <$> getCookie "session" req of

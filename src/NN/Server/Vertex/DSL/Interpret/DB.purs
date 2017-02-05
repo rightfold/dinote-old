@@ -23,6 +23,11 @@ runVertexDSLF
     -> VertexDSLF
     ~> Aff (uuid :: GENUUID, postgreSQL :: POSTGRESQL | eff)
 runVertexDSLF conn (GetVertex fileID vertexID next) = next <$> DB.readVertex conn fileID vertexID
+runVertexDSLF conn (GetVertices ids next) =
+    next <<< justs <$> for ids \(f /\ v) -> ((f /\ v) /\ _) <$> DB.readVertex conn f v
+    where justs Nil = Nil
+          justs ((_ /\ Nothing) : xs) = justs xs
+          justs ((k /\ Just v) : xs) = (k /\ v) : justs xs
 runVertexDSLF conn (CreateVertex fileID next) = next <$> DB.createVertex conn fileID
 runVertexDSLF conn (UpdateVertex fileID vertexID vertex next) = next <$ DB.updateVertex conn fileID vertexID vertex
 runVertexDSLF conn (CreateEdge fileID edge next) = next <$ DB.createEdge conn fileID edge

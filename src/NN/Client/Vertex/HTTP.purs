@@ -1,22 +1,56 @@
 module NN.Client.Vertex.HTTP
-( getVertex
+( getVertexBatcher
+, getVertex
 , createVertex
 , updateVertex
 , createEdge
 ) where
 
+import Control.Monad.Aff.AVar (AVAR)
+import Control.Monad.Aff.Skull as Skull
 import Control.Monad.Eff.Exception (throw)
+import Control.Monad.Eff.Ref (REF)
+import Data.Array as Array
 import Data.Sexp as Sexp
+import Data.String as String
+import Data.Time.Duration (Milliseconds(..))
+import Data.Tuple as Tuple
 import Network.HTTP.Affjax (AJAX)
 import Network.HTTP.Affjax as Affjax
 import NN.File (FileID(..))
 import NN.Prelude
 import NN.Vertex (Vertex, VertexID(..))
 
-getVertex :: ∀ eff. FileID -> VertexID -> Aff (ajax :: AJAX | eff) (Maybe Vertex)
-getVertex (FileID fileID) (VertexID vertexID) =
-    Affjax.get ("/api/v1/files/" <> fileID <> "/vertices/" <> vertexID)
-    <#> (_.response >>> Sexp.fromString >=> Sexp.fromSexp)
+getVertexBatcher
+    :: ∀ eff
+     . Skull.Batcher (ajax :: AJAX | eff)
+                     (FileID × VertexID)
+                     (Maybe Vertex)
+                     (List (FileID × VertexID))
+                     (Maybe (List ((FileID × VertexID) × Vertex)))
+                     (FileID × VertexID)
+getVertexBatcher =
+    { emptyBatch:    Nil
+    , maxBatchDelay: Just (Milliseconds 10.0)
+    , addRequest:    \r b -> (r : b) /\ r
+    , getResponse:   \k b -> Tuple.lookup k =<< b
+    , executeBatch
+    }
+    where
+    executeBatch ids =
+        Affjax.get ("/api/v1/files/batch/" <> args ids)
+        <#> (_.response >>> Sexp.fromString >=> Sexp.fromSexp)
+    args = Array.fromFoldable
+           >>> map (\(FileID f /\ VertexID v) -> f <> "_" <> v)
+           >>> String.joinWith "/"
+
+getVertex
+    :: ∀ eff
+     . Skull.State (ajax :: AJAX, avar :: AVAR, ref :: REF | eff) (FileID × VertexID) (Maybe Vertex)
+    -> FileID
+    -> VertexID
+    -> Aff (ajax :: AJAX, avar :: AVAR, ref :: REF | eff) (Maybe Vertex)
+getVertex skull fileID vertexID = Skull.request skull (fileID /\ vertexID)
 
 createVertex
     :: ∀ eff

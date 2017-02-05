@@ -36,7 +36,7 @@ type Slot = Unit + Unit + Void
 type Monad eff = Free (Workspace.UI.Monad eff ⊕ Authentication.UI.Monad)
 
 ui :: ∀ eff. Component HTML Query Input Output (Monad eff)
-ui = parentComponent {initialState, render, eval, handleInput: const Nothing}
+ui = parentComponent {initialState, render, eval, receiver: const Nothing}
     where
     initialState :: Input -> State
     initialState _ = NotAuthenticated

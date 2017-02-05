@@ -39,7 +39,7 @@ type Slot = VertexID
 type Monad eff = Free (Aff (avar :: AVAR | eff) ⊕ VertexDSL)
 
 ui :: ∀ eff. Component HTML Query Input Output (Monad eff)
-ui = parentComponent {initialState, render, eval, handleInput: const Nothing}
+ui = parentComponent {initialState, render, eval, receiver: const Nothing}
     where
     initialState :: Input -> State
     initialState _ =

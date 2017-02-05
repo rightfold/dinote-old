@@ -11,5 +11,5 @@ import Halogen.Component (Component, component, ComponentDSL, ComponentHTML, lif
 import Halogen.HTML (ClassName(..), HTML)
 import Halogen.Query (action, query, query', queryAll, queryAll')
 import Halogen.Query.EventSource (SubscribeStatus(..))
-import Halogen.Query.HalogenM (hoistM, raise, subscribe)
+import Halogen.Query.HalogenM (hoist, raise, subscribe)
 import NN.Prelude
